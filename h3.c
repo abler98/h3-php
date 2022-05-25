@@ -84,18 +84,19 @@ zend_object *geo_to_obj(GeoCoord *geo) {
 }
 
 zend_object *geo_boundary_to_obj(GeoBoundary *boundary) {
-    zval arr, geo;
-    array_init_size(&arr, boundary->numVerts);
+    zval *val = emalloc(sizeof(zval));
+    array_init_size(val, boundary->numVerts);
 
     for (int i = 0; i < boundary->numVerts; i++) {
-        ZVAL_OBJ(&geo, geo_to_obj(&boundary->verts[i]));
-        add_next_index_zval(&arr, &geo);
+        add_next_index_object(val, geo_to_obj(&boundary->verts[i]));
     }
 
     zend_object *obj = zend_objects_new(H3_GeoBoundary_ce);
     object_properties_init(obj, H3_GeoCoord_ce);
 
-    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &arr);
+    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, val);
+
+    efree(val);
 
     return obj;
 }
