@@ -29,8 +29,11 @@
 #define H3_LENGTH_UNIT_M 1
 #define H3_LENGTH_UNIT_RADS 2
 
+typedef H3Index H3UniEdge;
+
 zend_class_entry *H3_H3Exception_ce;
 zend_class_entry *H3_H3Index_ce;
+zend_class_entry *H3_H3UniEdge_ce;
 zend_class_entry *H3_GeoCoord_ce;
 zend_class_entry *H3_GeoBoundary_ce;
 
@@ -59,6 +62,31 @@ void h3_array_to_zend_array(H3Index *in, int size, zval *out) {
     for (int i = 0; i < size; i++) {
         if (in[i] != H3_INVALID_INDEX) {
             add_next_index_object(out, h3_to_obj(in[i]));
+        }
+    }
+}
+
+H3UniEdge obj_to_h3ue(zend_object *obj) {
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, 1, &rv);
+
+    return zval_get_long(prop);
+}
+
+zend_object *h3ue_to_obj(H3UniEdge index) {
+    zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
+    object_properties_init(obj, H3_H3UniEdge_ce);
+    zend_update_property_long(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, index);
+
+    return obj;
+}
+
+void h3ue_array_to_zend_array(H3UniEdge *in, int size, zval *out) {
+    for (int i = 0; i < size; i++) {
+        if (in[i] != H3_INVALID_INDEX) {
+            add_next_index_object(out, h3ue_to_obj(in[i]));
         }
     }
 }
@@ -359,6 +387,22 @@ PHP_FUNCTION(distance)
     ZEND_PARSE_PARAMETERS_END();
 
     RETURN_LONG(h3Distance(obj_to_h3(a), obj_to_h3(b)));
+}
+
+PHP_FUNCTION(indexes_are_neighbors)
+{
+    zend_object *org;
+    zend_object *dest;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJ_OF_CLASS(org, H3_H3Index_ce)
+        Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
+    ZEND_PARSE_PARAMETERS_END();
+
+    H3Index origin = obj_to_h3(org);
+    H3Index destination = obj_to_h3(dest);
+
+    RETURN_BOOL(h3IndexesAreNeighbors(origin, destination));
 }
 
 PHP_METHOD(H3_H3Index, __construct)
@@ -669,6 +713,50 @@ PHP_METHOD(H3_H3Index, getEdgeLength)
     }
 }
 
+PHP_METHOD(H3_H3Index, isNeighborTo)
+{
+    zend_object *dest;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
+    ZEND_PARSE_PARAMETERS_END();
+
+    H3Index origin = obj_to_h3(Z_OBJ_P(ZEND_THIS));
+    H3Index destination = obj_to_h3(dest);
+
+    RETURN_BOOL(h3IndexesAreNeighbors(origin, destination));
+}
+
+PHP_METHOD(H3_H3Index, getUnidirectionalEdges)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
+    int count = 6;
+    H3UniEdge *edges = ecalloc(count, sizeof(H3UniEdge));
+    getH3UnidirectionalEdgesFromHexagon(index, edges);
+
+    array_init_size(return_value, count);
+    h3ue_array_to_zend_array(edges, count, return_value);
+
+    efree(edges);
+}
+
+PHP_METHOD(H3_H3Index, toUnidirectionalEdge)
+{
+    zend_object *dest;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
+    ZEND_PARSE_PARAMETERS_END();
+
+    H3Index origin = obj_to_h3(Z_OBJ_P(ZEND_THIS));
+    H3Index destination = obj_to_h3(dest);
+    H3UniEdge edge = getH3UnidirectionalEdge(origin, destination);
+
+    RETURN_OBJ(h3ue_to_obj(edge));
+}
+
 PHP_METHOD(H3_H3Index, toParent)
 {
     zend_long res;
@@ -760,6 +848,119 @@ PHP_METHOD(H3_H3Index, toGeoBoundary)
     efree(boundary);
 }
 
+PHP_METHOD(H3_H3UniEdge, __construct)
+{
+    zend_ulong index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    zend_update_property_long(H3_H3UniEdge_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
+}
+
+PHP_METHOD(H3_H3UniEdge, fromLong)
+{
+    zend_ulong index;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
+    object_properties_init(obj, H3_H3UniEdge_ce);
+    zend_update_property_long(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, index);
+
+    RETURN_OBJ(obj);
+}
+
+PHP_METHOD(H3_H3UniEdge, fromString)
+{
+    zend_string *value;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(value)
+    ZEND_PARSE_PARAMETERS_END();
+
+    RETURN_OBJ(h3ue_to_obj(stringToH3(ZSTR_VAL(value))));
+}
+
+PHP_METHOD(H3_H3UniEdge, isValid)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+
+    RETURN_BOOL(h3UnidirectionalEdgeIsValid(edge));
+}
+
+PHP_METHOD(H3_H3UniEdge, getOrigin)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3Index origin = getOriginH3IndexFromUnidirectionalEdge(edge);
+
+    RETURN_OBJ(h3_to_obj(origin));
+}
+
+PHP_METHOD(H3_H3UniEdge, getDestination)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3Index destination = getDestinationH3IndexFromUnidirectionalEdge(edge);
+
+    RETURN_OBJ(h3_to_obj(destination));
+}
+
+PHP_METHOD(H3_H3UniEdge, getIndexes)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    int count = 2;
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3Index *out = ecalloc(count, sizeof(H3Index));
+    getH3IndexesFromUnidirectionalEdge(edge, out);
+
+    array_init_size(return_value, count);
+    h3_array_to_zend_array(out, count, return_value);
+
+    efree(out);
+}
+
+PHP_METHOD(H3_H3UniEdge, getBoundary)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    GeoBoundary *boundary = emalloc(sizeof(GeoBoundary));
+    getH3UnidirectionalEdgeBoundary(edge, boundary);
+
+    RETVAL_OBJ(geo_boundary_to_obj(boundary));
+
+    efree(boundary);
+}
+
+PHP_METHOD(H3_H3UniEdge, toLong)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    RETURN_LONG(obj_to_h3ue(Z_OBJ_P(ZEND_THIS)));
+}
+
+PHP_METHOD(H3_H3UniEdge, toString)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+
+    char *out = emalloc(H3_STRVAL_LEN);
+    h3ToString(edge, out, H3_STRVAL_LEN);
+    RETVAL_STRINGL(out, strlen(out));
+    efree(out);
+}
+
 PHP_METHOD(H3_GeoCoord, __construct)
 {
     double lat, lon;
@@ -832,6 +1033,7 @@ PHP_MINIT_FUNCTION(h3)
 
     H3_H3Exception_ce = register_class_H3_H3Exception(spl_ce_RuntimeException);
     H3_H3Index_ce = register_class_H3_H3Index();
+    H3_H3UniEdge_ce = register_class_H3_H3UniEdge();
     H3_GeoCoord_ce = register_class_H3_GeoCoord();
     H3_GeoBoundary_ce = register_class_H3_GeoBoundary();
 

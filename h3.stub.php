@@ -47,6 +47,8 @@ function line(H3Index $start, H3Index $end): array {}
 
 function distance(H3Index $a, H3Index $b): int {}
 
+function indexes_are_neighbors(H3Index $origin, H3Index $destination): bool {}
+
 final class H3Exception extends \RuntimeException {}
 
 final class H3Index {
@@ -111,6 +113,15 @@ final class H3Index {
 
     public function getEdgeLength(int $unit): float {}
 
+    public function isNeighborTo(H3Index $destination): bool {}
+
+    /**
+     * @return H3UniEdge[]
+     */
+    public function getUnidirectionalEdges(): array {}
+
+    public function toUnidirectionalEdge(H3Index $destination): H3UniEdge {}
+
     public function toParent(int $res): H3Index {}
 
     /**
@@ -127,6 +138,34 @@ final class H3Index {
     public function toGeo(): GeoCoord {}
 
     public function toGeoBoundary(): GeoBoundary {}
+}
+
+final class H3UniEdge {
+
+    private int $index;
+
+    public function __construct(int $index) {}
+
+    public static function fromLong(int $index): H3UniEdge {}
+
+    public static function fromString(string $value): H3UniEdge {}
+
+    public function isValid(): bool {}
+
+    public function getOrigin(): H3Index {}
+
+    public function getDestination(): H3Index {}
+
+    /**
+     * @return H3Index[]
+     */
+    public function getIndexes(): array {}
+
+    public function getBoundary(): GeoBoundary {}
+
+    public function toLong(): int {}
+
+    public function toString(): string {}
 }
 
 final class GeoCoord {
