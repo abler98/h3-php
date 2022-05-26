@@ -12,6 +12,8 @@
 #include "zend_exceptions.h"
 #include <h3/h3api.h>
 
+ZEND_DECLARE_MODULE_GLOBALS(h3)
+
 #define H3_STRVAL_LEN 17
 #define H3_INVALID_INDEX 0
 #define H3_HEX_NUM_EDGES 6
@@ -28,11 +30,12 @@
 #define H3_LENGTH_UNIT_RADS 2
 
 #define H3_ERR_CODE_INVALID_RES 1
-#define H3_ERR_CODE_UNSUPPORTED_UNIT 2
-#define H3_ERR_CODE_COMPACT_ERROR 3
-#define H3_ERR_CODE_UNCOMPACT_ERROR 4
-#define H3_ERR_CODE_LINE_SIZE_ERROR 5
-#define H3_ERR_CODE_PENTAGON_ENCOUNTERED 6
+#define H3_ERR_CODE_INVALID_INDEX 2
+#define H3_ERR_CODE_UNSUPPORTED_UNIT 3
+#define H3_ERR_CODE_COMPACT_ERROR 4
+#define H3_ERR_CODE_UNCOMPACT_ERROR 5
+#define H3_ERR_CODE_LINE_SIZE_ERROR 6
+#define H3_ERR_CODE_PENTAGON_ENCOUNTERED 7
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -43,10 +46,22 @@
 
 #define H3_THROW(message, code) zend_throw_exception(H3_H3Exception_ce, message, code)
 
-#define VALIDATE_H3_RES(res)                                     \
-    if (res < H3_MIN_RES || res > H3_MAX_RES) {                  \
-        H3_THROW("Invalid resolution", H3_ERR_CODE_INVALID_RES); \
+#define VALIDATE_H3_RES(res)                                            \
+    if (H3_G(validate_res) && (res < H3_MIN_RES || res > H3_MAX_RES)) { \
+        H3_THROW("Invalid resolution", H3_ERR_CODE_INVALID_RES);        \
+        RETURN_THROWS();                                                \
+    }
+
+#define VALIDATE_H3_INDEX(index)                                 \
+    if (H3_G(validate_index) && !h3IsValid(index)) {             \
+        H3_THROW("Invalid H3 index", H3_ERR_CODE_INVALID_INDEX); \
         RETURN_THROWS();                                         \
+    }
+
+#define VALIDATE_H3_UNI_EDGE(index)                                            \
+    if (H3_G(validate_index) && !h3UnidirectionalEdgeIsValid(index)) {         \
+        H3_THROW("Invalid H3 unidirectional edge", H3_ERR_CODE_INVALID_INDEX); \
+        RETURN_THROWS();                                                       \
     }
 
 typedef H3Index H3UniEdge;
@@ -489,6 +504,8 @@ PHP_METHOD(H3_H3Index, __construct)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
+    VALIDATE_H3_INDEX(index);
+
     zend_update_property_long(H3_H3Index_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
 }
 
@@ -501,6 +518,8 @@ PHP_METHOD(H3_H3Index, fromLong)
         Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
+
+    VALIDATE_H3_INDEX(index);
 
     zend_object *obj = zend_objects_new(H3_H3Index_ce);
     object_properties_init(obj, H3_H3Index_ce);
@@ -519,7 +538,11 @@ PHP_METHOD(H3_H3Index, fromString)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    RETURN_OBJ(h3_to_obj(stringToH3(ZSTR_VAL(value))));
+    H3Index index = stringToH3(ZSTR_VAL(value));
+
+    VALIDATE_H3_INDEX(index);
+
+    RETURN_OBJ(h3_to_obj(index));
 }
 
 PHP_METHOD(H3_H3Index, fromGeo)
@@ -857,6 +880,11 @@ PHP_METHOD(H3_H3Index, getUnidirectionalEdge)
     H3Index destination = obj_to_h3(dest);
     H3UniEdge edge = getH3UnidirectionalEdge(origin, destination);
 
+    if (edge == H3_INVALID_INDEX) {
+        H3_THROW("Failed to get unidirectional edge", 0);
+        RETURN_THROWS();
+    }
+
     RETURN_OBJ(h3ue_to_obj(edge));
 }
 
@@ -973,6 +1001,8 @@ PHP_METHOD(H3_H3UniEdge, __construct)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
+    VALIDATE_H3_UNI_EDGE(index);
+
     zend_update_property_long(H3_H3UniEdge_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
 }
 
@@ -985,6 +1015,8 @@ PHP_METHOD(H3_H3UniEdge, fromLong)
         Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
+
+    VALIDATE_H3_UNI_EDGE(index);
 
     zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
     object_properties_init(obj, H3_H3UniEdge_ce);
@@ -1003,7 +1035,11 @@ PHP_METHOD(H3_H3UniEdge, fromString)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    RETURN_OBJ(h3ue_to_obj(stringToH3(ZSTR_VAL(value))));
+    H3UniEdge edge = stringToH3(ZSTR_VAL(value));
+
+    VALIDATE_H3_UNI_EDGE(edge);
+
+    RETURN_OBJ(h3ue_to_obj(edge));
 }
 
 PHP_METHOD(H3_H3UniEdge, isValid)
@@ -1145,9 +1181,19 @@ PHP_METHOD(H3_GeoBoundary, getVertices)
     RETURN_ARR(Z_ARR_P(prop));
 }
 
+// clang-format off
+PHP_INI_BEGIN()
+    STD_PHP_INI_ENTRY("h3.validate_res", "1", PHP_INI_ALL, OnUpdateBool, validate_res, zend_h3_globals, h3_globals)
+    STD_PHP_INI_ENTRY("h3.validate_index", "0", PHP_INI_ALL, OnUpdateBool, validate_index, zend_h3_globals, h3_globals)
+PHP_INI_END()
+// clang-format on
+
 PHP_MINIT_FUNCTION(h3)
 {
+    REGISTER_INI_ENTRIES();
+
     REGISTER_LONG_CONSTANT("H3_ERR_CODE_INVALID_RES", H3_ERR_CODE_INVALID_RES, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_INVALID_INDEX", H3_ERR_CODE_INVALID_INDEX, CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("H3_ERR_CODE_UNSUPPORTED_UNIT", H3_ERR_CODE_UNSUPPORTED_UNIT, CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("H3_ERR_CODE_COMPACT_ERROR", H3_ERR_CODE_COMPACT_ERROR, CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("H3_ERR_CODE_UNCOMPACT_ERROR", H3_ERR_CODE_UNCOMPACT_ERROR, CONST_PERSISTENT);
@@ -1171,6 +1217,13 @@ PHP_MINIT_FUNCTION(h3)
     return SUCCESS;
 }
 
+PHP_MSHUTDOWN_FUNCTION(h3)
+{
+    UNREGISTER_INI_ENTRIES();
+
+    return SUCCESS;
+}
+
 PHP_RINIT_FUNCTION(h3)
 {
 #if defined(ZTS) && defined(COMPILE_DL_H3)
@@ -1187,18 +1240,31 @@ PHP_MINFO_FUNCTION(h3)
     php_info_print_table_end();
 }
 
+PHP_GINIT_FUNCTION(h3)
+{
+#if defined(ZTS) && defined(COMPILE_DL_H3)
+    ZEND_TSRMLS_CACHE_UPDATE();
+#endif
+
+    memset(h3_globals, 0, sizeof(zend_h3_globals));
+}
+
 // clang-format off
 zend_module_entry h3_module_entry = {
     STANDARD_MODULE_HEADER,
     "h3",
     ext_functions,
     PHP_MINIT(h3),
-    NULL,
+    PHP_MSHUTDOWN(h3),
     PHP_RINIT(h3),
     NULL,
     PHP_MINFO(h3),
     PHP_H3_VERSION,
-    STANDARD_MODULE_PROPERTIES
+    PHP_MODULE_GLOBALS(h3),
+    PHP_GINIT(h3),
+    NULL,
+    NULL,
+    STANDARD_MODULE_PROPERTIES_EX
 };
 // clang-format on
 
