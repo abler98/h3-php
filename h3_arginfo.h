@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: efc94633c6d7f26a7b96832f39eba09518f8fd3c */
+ * Stub hash: 6f1b4f99df33e695df3414835123d9f7f5984ced */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)
@@ -112,7 +112,7 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_H3Index_getUnidirectionalEdges arginfo_H3_get_res0_indexes
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_toUnidirectionalEdge, 0, 1, H3\\H3UniEdge, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_getUnidirectionalEdge, 0, 1, H3\\H3UniEdge, 0)
 	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
 ZEND_END_ARG_INFO()
 
@@ -209,7 +209,7 @@ ZEND_METHOD(H3_H3Index, getArea);
 ZEND_METHOD(H3_H3Index, getEdgeLength);
 ZEND_METHOD(H3_H3Index, isNeighborTo);
 ZEND_METHOD(H3_H3Index, getUnidirectionalEdges);
-ZEND_METHOD(H3_H3Index, toUnidirectionalEdge);
+ZEND_METHOD(H3_H3Index, getUnidirectionalEdge);
 ZEND_METHOD(H3_H3Index, toParent);
 ZEND_METHOD(H3_H3Index, toChildren);
 ZEND_METHOD(H3_H3Index, toCenterChild);
@@ -277,7 +277,7 @@ static const zend_function_entry class_H3_H3Index_methods[] = {
 	ZEND_ME(H3_H3Index, getEdgeLength, arginfo_class_H3_H3Index_getEdgeLength, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, isNeighborTo, arginfo_class_H3_H3Index_isNeighborTo, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getUnidirectionalEdges, arginfo_class_H3_H3Index_getUnidirectionalEdges, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3Index, toUnidirectionalEdge, arginfo_class_H3_H3Index_toUnidirectionalEdge, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, getUnidirectionalEdge, arginfo_class_H3_H3Index_getUnidirectionalEdge, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toParent, arginfo_class_H3_H3Index_toParent, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toChildren, arginfo_class_H3_H3Index_toChildren, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toCenterChild, arginfo_class_H3_H3Index_toCenterChild, ZEND_ACC_PUBLIC)

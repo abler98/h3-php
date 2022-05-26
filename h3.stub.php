@@ -120,7 +120,7 @@ final class H3Index {
      */
     public function getUnidirectionalEdges(): array {}
 
-    public function toUnidirectionalEdge(H3Index $destination): H3UniEdge {}
+    public function getUnidirectionalEdge(H3Index $destination): H3UniEdge {}
 
     public function toParent(int $res): H3Index {}
 

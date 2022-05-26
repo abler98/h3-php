@@ -11,6 +11,21 @@
 #include "h3_arginfo.h"
 #include <h3/h3api.h>
 
+#define H3_STRVAL_LEN 17
+#define H3_INVALID_INDEX 0
+#define H3_HEX_NUM_EDGES 6
+#define H3_EDGE_NUM_INDX 2
+#define H3_MIN_RES 0
+#define H3_MAX_RES 15
+
+#define H3_AREA_UNIT_KM2 0
+#define H3_AREA_UNIT_M2 1
+#define H3_AREA_UNIT_RADS2 2
+
+#define H3_LENGTH_UNIT_KM 0
+#define H3_LENGTH_UNIT_M 1
+#define H3_LENGTH_UNIT_RADS 2
+
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
 #define ZEND_PARSE_PARAMETERS_NONE() \
@@ -18,16 +33,11 @@
     ZEND_PARSE_PARAMETERS_END()
 #endif
 
-#define H3_STRVAL_LEN 17
-#define H3_INVALID_INDEX 0
-
-#define H3_AREA_UNIT_KM 0
-#define H3_AREA_UNIT_M 1
-#define H3_AREA_UNIT_RADS 2
-
-#define H3_LENGTH_UNIT_KM 0
-#define H3_LENGTH_UNIT_M 1
-#define H3_LENGTH_UNIT_RADS 2
+#define VALIDATE_H3_RES(res) \
+    if (res < H3_MIN_RES || res > H3_MAX_RES) { \
+        zend_throw_error(H3_H3Exception_ce, "Invalid resolution"); \
+        RETURN_THROWS(); \
+    }
 
 typedef H3Index H3UniEdge;
 
@@ -37,8 +47,8 @@ zend_class_entry *H3_H3UniEdge_ce;
 zend_class_entry *H3_GeoCoord_ce;
 zend_class_entry *H3_GeoBoundary_ce;
 
-inline int max_hex_kring_size(int k) {
-    return k == 0 ? 1 : 6 * k;
+int max_hex_kring_size(int k) {
+    return k == 0 ? 1 : k * H3_HEX_NUM_EDGES;
 }
 
 H3Index obj_to_h3(zend_object *obj) {
@@ -162,12 +172,12 @@ PHP_FUNCTION(hex_area)
     ZEND_PARSE_PARAMETERS_END();
 
     switch (unit) {
-        case H3_AREA_UNIT_KM:
+        case H3_AREA_UNIT_KM2:
             RETURN_DOUBLE(hexAreaKm2(res));
-        case H3_AREA_UNIT_M:
+        case H3_AREA_UNIT_M2:
             RETURN_DOUBLE(hexAreaM2(res));
         default:
-            zend_argument_value_error(2, "must be one of H3_AREA_UNIT_KM, or H3_AREA_UNIT_M");
+            zend_argument_value_error(2, "must be one of H3_AREA_UNIT_KM2, or H3_AREA_UNIT_M2");
             RETURN_THROWS();
     }
 }
@@ -321,6 +331,8 @@ PHP_FUNCTION(uncompact)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
 
+    VALIDATE_H3_RES(res);
+
     zend_array *arr = Z_ARR_P(indexes);
     int count = zend_array_count(arr);
 
@@ -331,6 +343,12 @@ PHP_FUNCTION(uncompact)
     }
 
     int max = maxUncompactSize(compactedSet, count, res);
+
+    if (max < 0) {
+        zend_throw_error(H3_H3Exception_ce, "Invalid resolution");
+        RETURN_THROWS();	
+    }
+
     H3Index *set = ecalloc(max, sizeof(H3Index));
 
     if (uncompact(compactedSet, count, set, max, res) != 0) {
@@ -678,14 +696,14 @@ PHP_METHOD(H3_H3Index, getArea)
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
     switch (unit) {
-        case H3_AREA_UNIT_KM:
+        case H3_AREA_UNIT_KM2:
             RETURN_DOUBLE(cellAreaKm2(index));
-        case H3_AREA_UNIT_M:
+        case H3_AREA_UNIT_M2:
             RETURN_DOUBLE(cellAreaM2(index));
-        case H3_AREA_UNIT_RADS:
+        case H3_AREA_UNIT_RADS2:
             RETURN_DOUBLE(cellAreaRads2(index));
         default:
-            zend_argument_value_error(2, "must be one of H3_AREA_UNIT_KM, H3_AREA_UNIT_M, or H3_AREA_UNIT_RADS");
+            zend_argument_value_error(2, "must be one of H3_AREA_UNIT_KM2, H3_AREA_UNIT_M2, or H3_AREA_UNIT_RADS2");
             RETURN_THROWS();
     }
 }
@@ -732,17 +750,16 @@ PHP_METHOD(H3_H3Index, getUnidirectionalEdges)
     ZEND_PARSE_PARAMETERS_NONE();
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-    int count = 6;
-    H3UniEdge *edges = ecalloc(count, sizeof(H3UniEdge));
+    H3UniEdge *edges = ecalloc(H3_HEX_NUM_EDGES, sizeof(H3UniEdge));
     getH3UnidirectionalEdgesFromHexagon(index, edges);
 
-    array_init_size(return_value, count);
-    h3ue_array_to_zend_array(edges, count, return_value);
+    array_init_size(return_value, H3_HEX_NUM_EDGES);
+    h3ue_array_to_zend_array(edges, H3_HEX_NUM_EDGES, return_value);
 
     efree(edges);
 }
 
-PHP_METHOD(H3_H3Index, toUnidirectionalEdge)
+PHP_METHOD(H3_H3Index, getUnidirectionalEdge)
 {
     zend_object *dest;
 
@@ -918,13 +935,12 @@ PHP_METHOD(H3_H3UniEdge, getIndexes)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    int count = 2;
     H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
-    H3Index *out = ecalloc(count, sizeof(H3Index));
+    H3Index *out = ecalloc(H3_EDGE_NUM_INDX, sizeof(H3Index));
     getH3IndexesFromUnidirectionalEdge(edge, out);
 
-    array_init_size(return_value, count);
-    h3_array_to_zend_array(out, count, return_value);
+    array_init_size(return_value, H3_EDGE_NUM_INDX);
+    h3_array_to_zend_array(out, H3_EDGE_NUM_INDX, return_value);
 
     efree(out);
 }
@@ -1023,9 +1039,9 @@ PHP_METHOD(H3_GeoBoundary, getVertices)
 
 PHP_MINIT_FUNCTION(h3)
 {
-    REGISTER_LONG_CONSTANT("H3_AREA_UNIT_KM", H3_AREA_UNIT_KM, CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("H3_AREA_UNIT_M", H3_AREA_UNIT_M, CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT("H3_AREA_UNIT_RADS", H3_AREA_UNIT_RADS, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_AREA_UNIT_KM2", H3_AREA_UNIT_KM2, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_AREA_UNIT_M2", H3_AREA_UNIT_M2, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_AREA_UNIT_RADS2", H3_AREA_UNIT_RADS2, CONST_PERSISTENT);
 
     REGISTER_LONG_CONSTANT("H3_LENGTH_UNIT_KM", H3_LENGTH_UNIT_KM, CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("H3_LENGTH_UNIT_M", H3_LENGTH_UNIT_M, CONST_PERSISTENT);
