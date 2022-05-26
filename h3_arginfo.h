@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 6f1b4f99df33e695df3414835123d9f7f5984ced */
+ * Stub hash: 40d0bf997773dce4c8b44250e34ffe19a9a357d0 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)

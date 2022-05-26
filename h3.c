@@ -1,14 +1,15 @@
 /* h3 extension for PHP */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
-#include "php.h"
-#include "ext/standard/info.h"
 #include "ext/spl/spl_exceptions.h"
-#include "php_h3.h"
+#include "ext/standard/info.h"
 #include "h3_arginfo.h"
+#include "php.h"
+#include "php_h3.h"
+#include "zend_exceptions.h"
 #include <h3/h3api.h>
 
 #define H3_STRVAL_LEN 17
@@ -26,17 +27,26 @@
 #define H3_LENGTH_UNIT_M 1
 #define H3_LENGTH_UNIT_RADS 2
 
+#define H3_ERR_CODE_INVALID_RES 1
+#define H3_ERR_CODE_UNSUPPORTED_UNIT 2
+#define H3_ERR_CODE_COMPACT_ERROR 3
+#define H3_ERR_CODE_UNCOMPACT_ERROR 4
+#define H3_ERR_CODE_LINE_SIZE_ERROR 5
+#define H3_ERR_CODE_PENTAGON_ENCOUNTERED 6
+
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
-#define ZEND_PARSE_PARAMETERS_NONE() \
+#define ZEND_PARSE_PARAMETERS_NONE()  \
     ZEND_PARSE_PARAMETERS_START(0, 0) \
     ZEND_PARSE_PARAMETERS_END()
 #endif
 
-#define VALIDATE_H3_RES(res) \
-    if (res < H3_MIN_RES || res > H3_MAX_RES) { \
-        zend_throw_error(H3_H3Exception_ce, "Invalid resolution"); \
-        RETURN_THROWS(); \
+#define H3_THROW(message, code) zend_throw_exception(H3_H3Exception_ce, message, code)
+
+#define VALIDATE_H3_RES(res)                                     \
+    if (res < H3_MIN_RES || res > H3_MAX_RES) {                  \
+        H3_THROW("Invalid resolution", H3_ERR_CODE_INVALID_RES); \
+        RETURN_THROWS();                                         \
     }
 
 typedef H3Index H3UniEdge;
@@ -47,11 +57,13 @@ zend_class_entry *H3_H3UniEdge_ce;
 zend_class_entry *H3_GeoCoord_ce;
 zend_class_entry *H3_GeoBoundary_ce;
 
-int max_hex_kring_size(int k) {
+int max_hex_kring_size(int k)
+{
     return k == 0 ? 1 : k * H3_HEX_NUM_EDGES;
 }
 
-H3Index obj_to_h3(zend_object *obj) {
+H3Index obj_to_h3(zend_object *obj)
+{
     zval *prop;
     zval rv;
 
@@ -60,7 +72,8 @@ H3Index obj_to_h3(zend_object *obj) {
     return zval_get_long(prop);
 }
 
-zend_object *h3_to_obj(H3Index index) {
+zend_object *h3_to_obj(H3Index index)
+{
     zend_object *obj = zend_objects_new(H3_H3Index_ce);
     object_properties_init(obj, H3_H3Index_ce);
     zend_update_property_long(H3_H3Index_ce, obj, "index", sizeof("index") - 1, index);
@@ -68,7 +81,8 @@ zend_object *h3_to_obj(H3Index index) {
     return obj;
 }
 
-void h3_array_to_zend_array(H3Index *in, int size, zval *out) {
+void h3_array_to_zend_array(H3Index *in, int size, zval *out)
+{
     for (int i = 0; i < size; i++) {
         if (in[i] != H3_INVALID_INDEX) {
             add_next_index_object(out, h3_to_obj(in[i]));
@@ -76,7 +90,8 @@ void h3_array_to_zend_array(H3Index *in, int size, zval *out) {
     }
 }
 
-H3UniEdge obj_to_h3ue(zend_object *obj) {
+H3UniEdge obj_to_h3ue(zend_object *obj)
+{
     zval *prop;
     zval rv;
 
@@ -85,7 +100,8 @@ H3UniEdge obj_to_h3ue(zend_object *obj) {
     return zval_get_long(prop);
 }
 
-zend_object *h3ue_to_obj(H3UniEdge index) {
+zend_object *h3ue_to_obj(H3UniEdge index)
+{
     zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
     object_properties_init(obj, H3_H3UniEdge_ce);
     zend_update_property_long(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, index);
@@ -93,7 +109,8 @@ zend_object *h3ue_to_obj(H3UniEdge index) {
     return obj;
 }
 
-void h3ue_array_to_zend_array(H3UniEdge *in, int size, zval *out) {
+void h3ue_array_to_zend_array(H3UniEdge *in, int size, zval *out)
+{
     for (int i = 0; i < size; i++) {
         if (in[i] != H3_INVALID_INDEX) {
             add_next_index_object(out, h3ue_to_obj(in[i]));
@@ -101,7 +118,8 @@ void h3ue_array_to_zend_array(H3UniEdge *in, int size, zval *out) {
     }
 }
 
-void obj_to_geo(zend_object *obj, GeoCoord *geo) {
+void obj_to_geo(zend_object *obj, GeoCoord *geo)
+{
     zval *prop;
     zval rv;
 
@@ -111,7 +129,8 @@ void obj_to_geo(zend_object *obj, GeoCoord *geo) {
     geo->lon = degsToRads(zval_get_double(prop));
 }
 
-zend_object *geo_to_obj(GeoCoord *geo) {
+zend_object *geo_to_obj(GeoCoord *geo)
+{
     zend_object *obj = zend_objects_new(H3_GeoCoord_ce);
     object_properties_init(obj, H3_GeoCoord_ce);
 
@@ -121,7 +140,8 @@ zend_object *geo_to_obj(GeoCoord *geo) {
     return obj;
 }
 
-zend_object *geo_boundary_to_obj(GeoBoundary *boundary) {
+zend_object *geo_boundary_to_obj(GeoBoundary *boundary)
+{
     zval *val = emalloc(sizeof(zval));
     array_init_size(val, boundary->numVerts);
 
@@ -143,9 +163,11 @@ PHP_FUNCTION(degs_to_rads)
 {
     double degrees;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_DOUBLE(degrees)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     RETURN_DOUBLE(degsToRads(degrees));
 }
@@ -154,9 +176,11 @@ PHP_FUNCTION(rads_to_degs)
 {
     double radians;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_DOUBLE(radians)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     RETURN_DOUBLE(radsToDegs(radians));
 }
@@ -166,10 +190,14 @@ PHP_FUNCTION(hex_area)
     zend_long res;
     zend_long unit;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_LONG(res)
         Z_PARAM_LONG(unit)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     switch (unit) {
         case H3_AREA_UNIT_KM2:
@@ -177,7 +205,8 @@ PHP_FUNCTION(hex_area)
         case H3_AREA_UNIT_M2:
             RETURN_DOUBLE(hexAreaM2(res));
         default:
-            zend_argument_value_error(2, "must be one of H3_AREA_UNIT_KM2, or H3_AREA_UNIT_M2");
+            H3_THROW("Unsupported unit (must be one of H3_AREA_UNIT_KM2, or H3_AREA_UNIT_M2)",
+                     H3_ERR_CODE_UNSUPPORTED_UNIT);
             RETURN_THROWS();
     }
 }
@@ -187,10 +216,14 @@ PHP_FUNCTION(edge_length)
     zend_long res;
     zend_long unit;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_LONG(res)
         Z_PARAM_LONG(unit)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     switch (unit) {
         case H3_LENGTH_UNIT_KM:
@@ -198,7 +231,8 @@ PHP_FUNCTION(edge_length)
         case H3_LENGTH_UNIT_M:
             RETURN_DOUBLE(edgeLengthM(res));
         default:
-            zend_argument_value_error(2, "must be one of H3_LENGTH_UNIT_KM, or H3_LENGTH_UNIT_RADS");
+            H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, or H3_LENGTH_UNIT_RADS)",
+                     H3_ERR_CODE_UNSUPPORTED_UNIT);
             RETURN_THROWS();
     }
 }
@@ -207,9 +241,13 @@ PHP_FUNCTION(num_hexagons)
 {
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     RETURN_LONG(numHexagons(res));
 }
@@ -233,9 +271,13 @@ PHP_FUNCTION(get_pentagon_indexes)
 {
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     int max = pentagonIndexCount();
 
@@ -254,11 +296,13 @@ PHP_FUNCTION(point_dist)
     zend_object *b;
     zend_long unit;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(3, 3)
         Z_PARAM_OBJ_OF_CLASS(a, H3_GeoCoord_ce)
         Z_PARAM_OBJ_OF_CLASS(b, H3_GeoCoord_ce)
         Z_PARAM_LONG(unit)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     GeoCoord *geoA = emalloc(sizeof(GeoCoord));
     GeoCoord *geoB = emalloc(sizeof(GeoCoord));
@@ -277,7 +321,8 @@ PHP_FUNCTION(point_dist)
             RETVAL_DOUBLE(pointDistRads(geoA, geoB));
             break;
         default:
-            zend_argument_value_error(3, "must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS");
+            H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS)",
+                     H3_ERR_CODE_UNSUPPORTED_UNIT);
             break;
     }
 
@@ -293,9 +338,11 @@ PHP_FUNCTION(compact)
 {
     zval *indexes;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_ARRAY(indexes)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_array *arr = Z_ARR_P(indexes);
     int count = zend_array_count(arr);
@@ -308,7 +355,7 @@ PHP_FUNCTION(compact)
     }
 
     if (compact(set, compactedSet, count) != 0) {
-        zend_throw_error(H3_H3Exception_ce, "Fail to compact");
+        H3_THROW("Failed to compact", H3_ERR_CODE_COMPACT_ERROR);
         efree(set);
         efree(compactedSet);
         RETURN_THROWS();
@@ -326,10 +373,12 @@ PHP_FUNCTION(uncompact)
     zval *indexes;
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_ARRAY(indexes)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     VALIDATE_H3_RES(res);
 
@@ -345,14 +394,15 @@ PHP_FUNCTION(uncompact)
     int max = maxUncompactSize(compactedSet, count, res);
 
     if (max < 0) {
-        zend_throw_error(H3_H3Exception_ce, "Invalid resolution");
-        RETURN_THROWS();	
+        H3_THROW("Unknown uncompact error", H3_ERR_CODE_UNCOMPACT_ERROR);
+        efree(compactedSet);
+        RETURN_THROWS();
     }
 
     H3Index *set = ecalloc(max, sizeof(H3Index));
 
     if (uncompact(compactedSet, count, set, max, res) != 0) {
-        zend_throw_error(H3_H3Exception_ce, "Failed to uncompact");	
+        H3_THROW("Failed to uncompact", H3_ERR_CODE_UNCOMPACT_ERROR);
         efree(compactedSet);
         efree(set);
         RETURN_THROWS();
@@ -370,21 +420,23 @@ PHP_FUNCTION(line)
     zend_object *start;
     zend_object *end;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJ_OF_CLASS(start, H3_H3Index_ce)
         Z_PARAM_OBJ_OF_CLASS(end, H3_H3Index_ce)
     ZEND_PARSE_PARAMETERS_END();
-    
+    // clang-format on
+
     H3Index startIndex = obj_to_h3(start);
     H3Index endIndex = obj_to_h3(end);
 
     int size = h3LineSize(startIndex, endIndex);
 
     if (size < 0) {
-        zend_throw_error(H3_H3Exception_ce, "Failed to caluclate line size");
+        H3_THROW("Failed to caluclate line size", H3_ERR_CODE_LINE_SIZE_ERROR);
         RETURN_THROWS();
     }
-    
+
     H3Index *out = ecalloc(size, sizeof(H3Index));
     h3Line(startIndex, endIndex, out);
 
@@ -399,10 +451,12 @@ PHP_FUNCTION(distance)
     zend_object *a;
     zend_object *b;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJ_OF_CLASS(a, H3_H3Index_ce)
         Z_PARAM_OBJ_OF_CLASS(b, H3_H3Index_ce)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     RETURN_LONG(h3Distance(obj_to_h3(a), obj_to_h3(b)));
 }
@@ -412,10 +466,12 @@ PHP_FUNCTION(indexes_are_neighbors)
     zend_object *org;
     zend_object *dest;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJ_OF_CLASS(org, H3_H3Index_ce)
         Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     H3Index origin = obj_to_h3(org);
     H3Index destination = obj_to_h3(dest);
@@ -427,9 +483,11 @@ PHP_METHOD(H3_H3Index, __construct)
 {
     zend_ulong index;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_update_property_long(H3_H3Index_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
 }
@@ -438,9 +496,11 @@ PHP_METHOD(H3_H3Index, fromLong)
 {
     zend_ulong index;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_object *obj = zend_objects_new(H3_H3Index_ce);
     object_properties_init(obj, H3_H3Index_ce);
@@ -453,9 +513,11 @@ PHP_METHOD(H3_H3Index, fromString)
 {
     zend_string *value;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_STR(value)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     RETURN_OBJ(h3_to_obj(stringToH3(ZSTR_VAL(value))));
 }
@@ -465,18 +527,22 @@ PHP_METHOD(H3_H3Index, fromGeo)
     zend_object *geo_obj;
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJ_OF_CLASS(geo_obj, H3_GeoCoord_ce)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     GeoCoord *geo = emalloc(sizeof(GeoCoord));
     obj_to_geo(geo_obj, geo);
     H3Index index = geoToH3(geo, res);
     efree(geo);
 
-    if (index == 0) {
-        zend_throw_error(H3_H3Exception_ce, "Unable to create H3 index from geo coordinates.");
+    if (index == H3_INVALID_INDEX) {
+        H3_THROW("Failed to create H3 index from geo coordinates", 0);
         RETURN_THROWS();
     }
 
@@ -543,9 +609,11 @@ PHP_METHOD(H3_H3Index, kRing)
 {
     zend_long k;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(k)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     int max = maxKringSize(k);
 
@@ -563,9 +631,11 @@ PHP_METHOD(H3_H3Index, kRingDistances)
 {
     zend_long k;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(k)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     int max = maxKringSize(k);
 
@@ -598,17 +668,19 @@ PHP_METHOD(H3_H3Index, hexRange)
 {
     zend_long k;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(k)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     int max = maxKringSize(k);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
-    
+
     if (hexRange(index, k, out) != 0) {
-        zend_throw_error(H3_H3Exception_ce, "Pentagonal distortion is encountered");
+        H3_THROW("Pentagonal distortion is encountered", H3_ERR_CODE_PENTAGON_ENCOUNTERED);
         efree(out);
         RETURN_THROWS();
     }
@@ -623,17 +695,19 @@ PHP_METHOD(H3_H3Index, hexRing)
 {
     zend_long k;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(k)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     int max = max_hex_kring_size(k);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
-    
+
     if (hexRing(index, k, out) != 0) {
-        zend_throw_error(H3_H3Exception_ce, "Pentagonal distortion is encountered");
+        H3_THROW("Pentagonal distortion is encountered", H3_ERR_CODE_PENTAGON_ENCOUNTERED);
         efree(out);
         RETURN_THROWS();
     }
@@ -648,18 +722,20 @@ PHP_METHOD(H3_H3Index, hexRangeDistances)
 {
     zend_long k;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(k)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     int max = maxKringSize(k);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
     int *distances = ecalloc(max, sizeof(int));
-    
+
     if (hexRangeDistances(index, k, out, distances) != 0) {
-        zend_throw_error(H3_H3Exception_ce, "Pentagonal distortion is encountered");
+        H3_THROW("Pentagonal distortion is encountered", H3_ERR_CODE_PENTAGON_ENCOUNTERED);
         efree(out);
         efree(distances);
         RETURN_THROWS();
@@ -689,9 +765,11 @@ PHP_METHOD(H3_H3Index, getArea)
 {
     zend_long unit;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(unit)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
@@ -703,7 +781,8 @@ PHP_METHOD(H3_H3Index, getArea)
         case H3_AREA_UNIT_RADS2:
             RETURN_DOUBLE(cellAreaRads2(index));
         default:
-            zend_argument_value_error(2, "must be one of H3_AREA_UNIT_KM2, H3_AREA_UNIT_M2, or H3_AREA_UNIT_RADS2");
+            H3_THROW("Unsupported unit (must be one of H3_AREA_UNIT_KM2, H3_AREA_UNIT_M2, or H3_AREA_UNIT_RADS2)",
+                     H3_ERR_CODE_UNSUPPORTED_UNIT);
             RETURN_THROWS();
     }
 }
@@ -712,9 +791,11 @@ PHP_METHOD(H3_H3Index, getEdgeLength)
 {
     zend_long unit;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(unit)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
@@ -726,7 +807,8 @@ PHP_METHOD(H3_H3Index, getEdgeLength)
         case H3_LENGTH_UNIT_RADS:
             RETURN_DOUBLE(exactEdgeLengthRads(index));
         default:
-            zend_argument_value_error(2, "must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS");
+            H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS)",
+                     H3_ERR_CODE_UNSUPPORTED_UNIT);
             RETURN_THROWS();
     }
 }
@@ -735,9 +817,11 @@ PHP_METHOD(H3_H3Index, isNeighborTo)
 {
     zend_object *dest;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     H3Index origin = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index destination = obj_to_h3(dest);
@@ -763,9 +847,11 @@ PHP_METHOD(H3_H3Index, getUnidirectionalEdge)
 {
     zend_object *dest;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     H3Index origin = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index destination = obj_to_h3(dest);
@@ -778,9 +864,13 @@ PHP_METHOD(H3_H3Index, toParent)
 {
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index parent = h3ToParent(index, res);
@@ -792,13 +882,17 @@ PHP_METHOD(H3_H3Index, toChildren)
 {
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     int max = maxH3ToChildrenSize(index, res);
-    
+
     H3Index *children = ecalloc(max, sizeof(H3Index));
     h3ToChildren(index, res, children);
 
@@ -812,9 +906,13 @@ PHP_METHOD(H3_H3Index, toCenterChild)
 {
     zend_long res;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index child = h3ToCenterChild(index, res);
@@ -869,9 +967,11 @@ PHP_METHOD(H3_H3UniEdge, __construct)
 {
     zend_ulong index;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_update_property_long(H3_H3UniEdge_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
 }
@@ -880,9 +980,11 @@ PHP_METHOD(H3_H3UniEdge, fromLong)
 {
     zend_ulong index;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
     object_properties_init(obj, H3_H3UniEdge_ce);
@@ -895,9 +997,11 @@ PHP_METHOD(H3_H3UniEdge, fromString)
 {
     zend_string *value;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_STR(value)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     RETURN_OBJ(h3ue_to_obj(stringToH3(ZSTR_VAL(value))));
 }
@@ -981,10 +1085,12 @@ PHP_METHOD(H3_GeoCoord, __construct)
 {
     double lat, lon;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_DOUBLE(lat)
         Z_PARAM_DOUBLE(lon)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_update_property_double(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lat", sizeof("lat") - 1, lat);
     zend_update_property_double(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lon", sizeof("lon") - 1, lon);
@@ -1018,9 +1124,11 @@ PHP_METHOD(H3_GeoBoundary, __construct)
 {
     zval *vertices;
 
+    // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_ARRAY(vertices)
     ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
 
     zend_update_property(H3_GeoBoundary_ce, Z_OBJ_P(ZEND_THIS), "vertices", sizeof("vertices") - 1, vertices);
 }
@@ -1039,6 +1147,13 @@ PHP_METHOD(H3_GeoBoundary, getVertices)
 
 PHP_MINIT_FUNCTION(h3)
 {
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_INVALID_RES", H3_ERR_CODE_INVALID_RES, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_UNSUPPORTED_UNIT", H3_ERR_CODE_UNSUPPORTED_UNIT, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_COMPACT_ERROR", H3_ERR_CODE_COMPACT_ERROR, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_UNCOMPACT_ERROR", H3_ERR_CODE_UNCOMPACT_ERROR, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_LINE_SIZE_ERROR", H3_ERR_CODE_LINE_SIZE_ERROR, CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("H3_ERR_CODE_PENTAGON_ENCOUNTERED", H3_ERR_CODE_PENTAGON_ENCOUNTERED, CONST_PERSISTENT);
+
     REGISTER_LONG_CONSTANT("H3_AREA_UNIT_KM2", H3_AREA_UNIT_KM2, CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("H3_AREA_UNIT_M2", H3_AREA_UNIT_M2, CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT("H3_AREA_UNIT_RADS2", H3_AREA_UNIT_RADS2, CONST_PERSISTENT);
@@ -1072,6 +1187,7 @@ PHP_MINFO_FUNCTION(h3)
     php_info_print_table_end();
 }
 
+// clang-format off
 zend_module_entry h3_module_entry = {
     STANDARD_MODULE_HEADER,
     "h3",
@@ -1084,10 +1200,11 @@ zend_module_entry h3_module_entry = {
     PHP_H3_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
+// clang-format on
 
 #ifdef COMPILE_DL_H3
-# ifdef ZTS
+#ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
-# endif
+#endif
 ZEND_GET_MODULE(h3)
 #endif

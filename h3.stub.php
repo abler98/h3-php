@@ -8,10 +8,19 @@ function degs_to_rads(float $degrees): float {}
 
 function rads_to_degs(float $radians): float {}
 
+/**
+ * @throws H3Exception if invalid resolution given
+ */
 function hex_area(int $res, int $unit): float {}
 
+/**
+ * @throws H3Exception if invalid resolution given
+ */
 function edge_length(int $res, int $unit): float {}
 
+/**
+ * @throws H3Exception if invalid resolution given
+ */
 function num_hexagons(int $res): int {}
 
 /**
@@ -21,6 +30,7 @@ function get_res0_indexes(): array {}
 
 /**
  * @return H3Index[]
+ * @throws H3Exception
  */
 function get_pentagon_indexes(int $res): array {}
 
@@ -36,6 +46,7 @@ function compact(array $indexes): array {}
 /**
  * @param H3Index[] $indexes
  * @return H3Index[]
+ * @throws H3Exception if invalid resolution given
  */
 function uncompact(array $indexes, int $res): array {}
 
@@ -122,13 +133,20 @@ final class H3Index {
 
     public function getUnidirectionalEdge(H3Index $destination): H3UniEdge {}
 
+    /**
+     * @throws H3Exception if invalid resolution given
+     */
     public function toParent(int $res): H3Index {}
 
     /**
      * @return H3Index[]
+     * @throws H3Exception if invalid resolution given
      */
     public function toChildren(int $res): array {}
 
+    /**
+     * @throws H3Exception if invalid resolution given
+     */
     public function toCenterChild(int $res): H3Index {}
 
     public function toLong(): int {}
