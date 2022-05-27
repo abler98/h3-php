@@ -1183,8 +1183,8 @@ PHP_METHOD(H3_GeoBoundary, getVertices)
 
 // clang-format off
 PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("h3.validate_res", "1", PHP_INI_ALL, OnUpdateBool, validate_res, zend_h3_globals, h3_globals)
-    STD_PHP_INI_ENTRY("h3.validate_index", "0", PHP_INI_ALL, OnUpdateBool, validate_index, zend_h3_globals, h3_globals)
+    STD_PHP_INI_ENTRY("h3.validate_res", "On", PHP_INI_ALL, OnUpdateBool, validate_res, zend_h3_globals, h3_globals)
+    STD_PHP_INI_ENTRY("h3.validate_index", "Off", PHP_INI_ALL, OnUpdateBool, validate_index, zend_h3_globals, h3_globals)
 PHP_INI_END()
 // clang-format on
 
@@ -1236,8 +1236,11 @@ PHP_RINIT_FUNCTION(h3)
 PHP_MINFO_FUNCTION(h3)
 {
     php_info_print_table_start();
-    php_info_print_table_header(2, "h3 support", "enabled");
+    php_info_print_table_header(2, "H3 support", "enabled");
+    php_info_print_table_row(2, "Version", PHP_H3_VERSION);
     php_info_print_table_end();
+
+    DISPLAY_INI_ENTRIES();
 }
 
 PHP_GINIT_FUNCTION(h3)
