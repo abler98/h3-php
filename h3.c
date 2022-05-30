@@ -784,7 +784,7 @@ PHP_METHOD(H3_H3Index, hexRangeDistances)
     efree(values);
 }
 
-PHP_METHOD(H3_H3Index, getArea)
+PHP_METHOD(H3_H3Index, getCellArea)
 {
     zend_long unit;
 
@@ -805,32 +805,6 @@ PHP_METHOD(H3_H3Index, getArea)
             RETURN_DOUBLE(cellAreaRads2(index));
         default:
             H3_THROW("Unsupported unit (must be one of H3_AREA_UNIT_KM2, H3_AREA_UNIT_M2, or H3_AREA_UNIT_RADS2)",
-                     H3_ERR_CODE_UNSUPPORTED_UNIT);
-            RETURN_THROWS();
-    }
-}
-
-PHP_METHOD(H3_H3Index, getEdgeLength)
-{
-    zend_long unit;
-
-    // clang-format off
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_LONG(unit)
-    ZEND_PARSE_PARAMETERS_END();
-    // clang-format on
-
-    H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-
-    switch (unit) {
-        case H3_LENGTH_UNIT_KM:
-            RETURN_DOUBLE(exactEdgeLengthKm(index));
-        case H3_LENGTH_UNIT_M:
-            RETURN_DOUBLE(exactEdgeLengthM(index));
-        case H3_LENGTH_UNIT_RADS:
-            RETURN_DOUBLE(exactEdgeLengthRads(index));
-        default:
-            H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS)",
                      H3_ERR_CODE_UNSUPPORTED_UNIT);
             RETURN_THROWS();
     }
@@ -1096,6 +1070,32 @@ PHP_METHOD(H3_H3UniEdge, getBoundary)
     RETVAL_OBJ(geo_boundary_to_obj(boundary));
 
     efree(boundary);
+}
+
+PHP_METHOD(H3_H3UniEdge, getLength)
+{
+    zend_long unit;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(unit)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+
+    switch (unit) {
+        case H3_LENGTH_UNIT_KM:
+            RETURN_DOUBLE(exactEdgeLengthKm(edge));
+        case H3_LENGTH_UNIT_M:
+            RETURN_DOUBLE(exactEdgeLengthM(edge));
+        case H3_LENGTH_UNIT_RADS:
+            RETURN_DOUBLE(exactEdgeLengthRads(edge));
+        default:
+            H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS)",
+                     H3_ERR_CODE_UNSUPPORTED_UNIT);
+            RETURN_THROWS();
+    }
 }
 
 PHP_METHOD(H3_H3UniEdge, toLong)

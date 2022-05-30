@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 40d0bf997773dce4c8b44250e34ffe19a9a357d0 */
+ * Stub hash: 5e3be54dda548dd84da85bdd95c340585ead4aa3 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)
@@ -100,11 +100,9 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_H3Index_hexRangeDistances arginfo_class_H3_H3Index_kRing
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_getArea, 0, 1, IS_DOUBLE, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_getCellArea, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, unit, IS_LONG, 0)
 ZEND_END_ARG_INFO()
-
-#define arginfo_class_H3_H3Index_getEdgeLength arginfo_class_H3_H3Index_getArea
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_isNeighborTo, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
@@ -156,6 +154,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_H3UniEdge_getBoundary arginfo_class_H3_H3Index_toGeoBoundary
 
+#define arginfo_class_H3_H3UniEdge_getLength arginfo_class_H3_H3Index_getCellArea
+
 #define arginfo_class_H3_H3UniEdge_toLong arginfo_class_H3_H3Index_getResolution
 
 #define arginfo_class_H3_H3UniEdge_toString arginfo_class_H3_H3Index_toString
@@ -205,8 +205,7 @@ ZEND_METHOD(H3_H3Index, kRingDistances);
 ZEND_METHOD(H3_H3Index, hexRange);
 ZEND_METHOD(H3_H3Index, hexRing);
 ZEND_METHOD(H3_H3Index, hexRangeDistances);
-ZEND_METHOD(H3_H3Index, getArea);
-ZEND_METHOD(H3_H3Index, getEdgeLength);
+ZEND_METHOD(H3_H3Index, getCellArea);
 ZEND_METHOD(H3_H3Index, isNeighborTo);
 ZEND_METHOD(H3_H3Index, getUnidirectionalEdges);
 ZEND_METHOD(H3_H3Index, getUnidirectionalEdge);
@@ -225,6 +224,7 @@ ZEND_METHOD(H3_H3UniEdge, getOrigin);
 ZEND_METHOD(H3_H3UniEdge, getDestination);
 ZEND_METHOD(H3_H3UniEdge, getIndexes);
 ZEND_METHOD(H3_H3UniEdge, getBoundary);
+ZEND_METHOD(H3_H3UniEdge, getLength);
 ZEND_METHOD(H3_H3UniEdge, toLong);
 ZEND_METHOD(H3_H3UniEdge, toString);
 ZEND_METHOD(H3_GeoCoord, __construct);
@@ -273,8 +273,7 @@ static const zend_function_entry class_H3_H3Index_methods[] = {
 	ZEND_ME(H3_H3Index, hexRange, arginfo_class_H3_H3Index_hexRange, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, hexRing, arginfo_class_H3_H3Index_hexRing, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, hexRangeDistances, arginfo_class_H3_H3Index_hexRangeDistances, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3Index, getArea, arginfo_class_H3_H3Index_getArea, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3Index, getEdgeLength, arginfo_class_H3_H3Index_getEdgeLength, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, getCellArea, arginfo_class_H3_H3Index_getCellArea, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, isNeighborTo, arginfo_class_H3_H3Index_isNeighborTo, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getUnidirectionalEdges, arginfo_class_H3_H3Index_getUnidirectionalEdges, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getUnidirectionalEdge, arginfo_class_H3_H3Index_getUnidirectionalEdge, ZEND_ACC_PUBLIC)
@@ -298,6 +297,7 @@ static const zend_function_entry class_H3_H3UniEdge_methods[] = {
 	ZEND_ME(H3_H3UniEdge, getDestination, arginfo_class_H3_H3UniEdge_getDestination, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3UniEdge, getIndexes, arginfo_class_H3_H3UniEdge_getIndexes, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3UniEdge, getBoundary, arginfo_class_H3_H3UniEdge_getBoundary, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3UniEdge, getLength, arginfo_class_H3_H3UniEdge_getLength, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3UniEdge, toLong, arginfo_class_H3_H3UniEdge_toLong, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3UniEdge, toString, arginfo_class_H3_H3UniEdge_toString, ZEND_ACC_PUBLIC)
 	ZEND_FE_END

@@ -120,9 +120,7 @@ final class H3Index {
      */
     public function hexRangeDistances(int $k): array {}
 
-    public function getArea(int $unit): float {}
-
-    public function getEdgeLength(int $unit): float {}
+    public function getCellArea(int $unit): float {}
 
     public function isNeighborTo(H3Index $destination): bool {}
 
@@ -180,6 +178,8 @@ final class H3UniEdge {
     public function getIndexes(): array {}
 
     public function getBoundary(): GeoBoundary {}
+
+    public function getLength(int $unit): float {}
 
     public function toLong(): int {}
 
