@@ -60,6 +60,17 @@ function distance(H3Index $a, H3Index $b): int {}
 
 function indexes_are_neighbors(H3Index $origin, H3Index $destination): bool {}
 
+/**
+ * @return H3Index[]
+ * @throws H3Exception
+ */
+function polyfill(GeoPolygon $polygon, int $res): array {}
+
+/**
+ * @param H3Index[] $indexes
+ */
+function h3_set_to_multi_polygon(array $indexes): GeoMultiPolygon {}
+
 final class H3Exception extends \RuntimeException {}
 
 final class H3Index {
@@ -154,6 +165,8 @@ final class H3Index {
     public function toGeo(): GeoCoord {}
 
     public function toGeoBoundary(): GeoBoundary {}
+
+    public function __toString(): string {}
 }
 
 final class H3UniEdge {
@@ -184,6 +197,8 @@ final class H3UniEdge {
     public function toLong(): int {}
 
     public function toString(): string {}
+
+    public function __toString(): string {}
 }
 
 final class GeoCoord {
@@ -215,4 +230,44 @@ final class GeoBoundary {
      * @return GeoCoord[]
      */
     public function getVertices(): array {}
+}
+
+final class GeoPolygon {
+
+    private GeoBoundary $geofence;
+
+    /**
+     * @var GeoBoundary[]
+     */
+    private array $holes;
+
+    /**
+     * @param GeoBoundary[] $holes
+     */
+    public function __construct(GeoBoundary $geofence, array $holes = []) {}
+
+    public function getGeofence(): GeoBoundary {}
+
+    /**
+     * @return GeoBoundary[]
+     */
+    public function getHoles(): array {}
+}
+
+final class GeoMultiPolygon {
+
+    /**
+     * @var GeoPolygon[]
+     */
+    private array $polygons;
+
+    /**
+     * @param GeoPolygon[] $polygons
+     */
+    public function __construct(array $polygons) {}
+
+    /**
+     * @return GeoPolygon[]
+     */
+    public function getPolygons(): array {}
 }

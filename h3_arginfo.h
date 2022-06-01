@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 5e3be54dda548dd84da85bdd95c340585ead4aa3 */
+ * Stub hash: fd4e03918e4ab32e070a3b03f94b39fb0d6cb916 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)
@@ -55,6 +55,15 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_indexes_are_neighbors, 0, 2, _IS_BOOL, 0)
 	ZEND_ARG_OBJ_INFO(0, origin, H3\\H3Index, 0)
 	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_polyfill, 0, 2, IS_ARRAY, 0)
+	ZEND_ARG_OBJ_INFO(0, polygon, H3\\GeoPolygon, 0)
+	ZEND_ARG_TYPE_INFO(0, res, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_H3_h3_set_to_multi_polygon, 0, 1, H3\\GeoMultiPolygon, 0)
+	ZEND_ARG_TYPE_INFO(0, indexes, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_H3Index___construct, 0, 0, 1)
@@ -133,6 +142,8 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_toGeoBoundary, 0, 0, H3\\GeoBoundary, 0)
 ZEND_END_ARG_INFO()
 
+#define arginfo_class_H3_H3Index___toString arginfo_class_H3_H3Index_toString
+
 #define arginfo_class_H3_H3UniEdge___construct arginfo_class_H3_H3Index___construct
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3UniEdge_fromLong, 0, 1, H3\\H3UniEdge, 0)
@@ -160,6 +171,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_H3UniEdge_toString arginfo_class_H3_H3Index_toString
 
+#define arginfo_class_H3_H3UniEdge___toString arginfo_class_H3_H3Index_toString
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_GeoCoord___construct, 0, 0, 2)
 	ZEND_ARG_TYPE_INFO(0, lat, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, lon, IS_DOUBLE, 0)
@@ -176,6 +189,21 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_GeoBoundary_getVertices arginfo_H3_get_res0_indexes
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_GeoPolygon___construct, 0, 0, 1)
+	ZEND_ARG_OBJ_INFO(0, geofence, H3\\GeoBoundary, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, holes, IS_ARRAY, 0, "[]")
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_H3_GeoPolygon_getGeofence arginfo_class_H3_H3Index_toGeoBoundary
+
+#define arginfo_class_H3_GeoPolygon_getHoles arginfo_H3_get_res0_indexes
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_GeoMultiPolygon___construct, 0, 0, 1)
+	ZEND_ARG_TYPE_INFO(0, polygons, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
+#define arginfo_class_H3_GeoMultiPolygon_getPolygons arginfo_H3_get_res0_indexes
+
 
 ZEND_FUNCTION(degs_to_rads);
 ZEND_FUNCTION(rads_to_degs);
@@ -190,6 +218,8 @@ ZEND_FUNCTION(uncompact);
 ZEND_FUNCTION(line);
 ZEND_FUNCTION(distance);
 ZEND_FUNCTION(indexes_are_neighbors);
+ZEND_FUNCTION(polyfill);
+ZEND_FUNCTION(h3_set_to_multi_polygon);
 ZEND_METHOD(H3_H3Index, __construct);
 ZEND_METHOD(H3_H3Index, fromLong);
 ZEND_METHOD(H3_H3Index, fromString);
@@ -216,6 +246,7 @@ ZEND_METHOD(H3_H3Index, toLong);
 ZEND_METHOD(H3_H3Index, toString);
 ZEND_METHOD(H3_H3Index, toGeo);
 ZEND_METHOD(H3_H3Index, toGeoBoundary);
+ZEND_METHOD(H3_H3Index, __toString);
 ZEND_METHOD(H3_H3UniEdge, __construct);
 ZEND_METHOD(H3_H3UniEdge, fromLong);
 ZEND_METHOD(H3_H3UniEdge, fromString);
@@ -227,11 +258,17 @@ ZEND_METHOD(H3_H3UniEdge, getBoundary);
 ZEND_METHOD(H3_H3UniEdge, getLength);
 ZEND_METHOD(H3_H3UniEdge, toLong);
 ZEND_METHOD(H3_H3UniEdge, toString);
+ZEND_METHOD(H3_H3UniEdge, __toString);
 ZEND_METHOD(H3_GeoCoord, __construct);
 ZEND_METHOD(H3_GeoCoord, getLat);
 ZEND_METHOD(H3_GeoCoord, getLon);
 ZEND_METHOD(H3_GeoBoundary, __construct);
 ZEND_METHOD(H3_GeoBoundary, getVertices);
+ZEND_METHOD(H3_GeoPolygon, __construct);
+ZEND_METHOD(H3_GeoPolygon, getGeofence);
+ZEND_METHOD(H3_GeoPolygon, getHoles);
+ZEND_METHOD(H3_GeoMultiPolygon, __construct);
+ZEND_METHOD(H3_GeoMultiPolygon, getPolygons);
 
 
 static const zend_function_entry ext_functions[] = {
@@ -248,6 +285,8 @@ static const zend_function_entry ext_functions[] = {
 	ZEND_NS_FE("H3", line, arginfo_H3_line)
 	ZEND_NS_FE("H3", distance, arginfo_H3_distance)
 	ZEND_NS_FE("H3", indexes_are_neighbors, arginfo_H3_indexes_are_neighbors)
+	ZEND_NS_FE("H3", polyfill, arginfo_H3_polyfill)
+	ZEND_NS_FE("H3", h3_set_to_multi_polygon, arginfo_H3_h3_set_to_multi_polygon)
 	ZEND_FE_END
 };
 
@@ -284,6 +323,7 @@ static const zend_function_entry class_H3_H3Index_methods[] = {
 	ZEND_ME(H3_H3Index, toString, arginfo_class_H3_H3Index_toString, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toGeo, arginfo_class_H3_H3Index_toGeo, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toGeoBoundary, arginfo_class_H3_H3Index_toGeoBoundary, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, __toString, arginfo_class_H3_H3Index___toString, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -300,6 +340,7 @@ static const zend_function_entry class_H3_H3UniEdge_methods[] = {
 	ZEND_ME(H3_H3UniEdge, getLength, arginfo_class_H3_H3UniEdge_getLength, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3UniEdge, toLong, arginfo_class_H3_H3UniEdge_toLong, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3UniEdge, toString, arginfo_class_H3_H3UniEdge_toString, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3UniEdge, __toString, arginfo_class_H3_H3UniEdge___toString, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -315,6 +356,21 @@ static const zend_function_entry class_H3_GeoCoord_methods[] = {
 static const zend_function_entry class_H3_GeoBoundary_methods[] = {
 	ZEND_ME(H3_GeoBoundary, __construct, arginfo_class_H3_GeoBoundary___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_GeoBoundary, getVertices, arginfo_class_H3_GeoBoundary_getVertices, ZEND_ACC_PUBLIC)
+	ZEND_FE_END
+};
+
+
+static const zend_function_entry class_H3_GeoPolygon_methods[] = {
+	ZEND_ME(H3_GeoPolygon, __construct, arginfo_class_H3_GeoPolygon___construct, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_GeoPolygon, getGeofence, arginfo_class_H3_GeoPolygon_getGeofence, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_GeoPolygon, getHoles, arginfo_class_H3_GeoPolygon_getHoles, ZEND_ACC_PUBLIC)
+	ZEND_FE_END
+};
+
+
+static const zend_function_entry class_H3_GeoMultiPolygon_methods[] = {
+	ZEND_ME(H3_GeoMultiPolygon, __construct, arginfo_class_H3_GeoMultiPolygon___construct, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_GeoMultiPolygon, getPolygons, arginfo_class_H3_GeoMultiPolygon_getPolygons, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -399,6 +455,47 @@ static zend_class_entry *register_class_H3_GeoBoundary(void)
 	zend_string *property_vertices_name = zend_string_init("vertices", sizeof("vertices") - 1, 1);
 	zend_declare_typed_property(class_entry, property_vertices_name, &property_vertices_default_value, ZEND_ACC_PRIVATE, NULL, (zend_type) ZEND_TYPE_INIT_MASK(MAY_BE_ARRAY));
 	zend_string_release(property_vertices_name);
+
+	return class_entry;
+}
+
+static zend_class_entry *register_class_H3_GeoPolygon(void)
+{
+	zend_class_entry ce, *class_entry;
+
+	INIT_NS_CLASS_ENTRY(ce, "H3", "GeoPolygon", class_H3_GeoPolygon_methods);
+	class_entry = zend_register_internal_class_ex(&ce, NULL);
+	class_entry->ce_flags |= ZEND_ACC_FINAL;
+
+	zend_string *property_geofence_class_H3_GeoBoundary = zend_string_init("H3\\GeoBoundary", sizeof("H3\\GeoBoundary")-1, 1);
+	zval property_geofence_default_value;
+	ZVAL_UNDEF(&property_geofence_default_value);
+	zend_string *property_geofence_name = zend_string_init("geofence", sizeof("geofence") - 1, 1);
+	zend_declare_typed_property(class_entry, property_geofence_name, &property_geofence_default_value, ZEND_ACC_PRIVATE, NULL, (zend_type) ZEND_TYPE_INIT_CLASS(property_geofence_class_H3_GeoBoundary, 0, 0));
+	zend_string_release(property_geofence_name);
+
+	zval property_holes_default_value;
+	ZVAL_UNDEF(&property_holes_default_value);
+	zend_string *property_holes_name = zend_string_init("holes", sizeof("holes") - 1, 1);
+	zend_declare_typed_property(class_entry, property_holes_name, &property_holes_default_value, ZEND_ACC_PRIVATE, NULL, (zend_type) ZEND_TYPE_INIT_MASK(MAY_BE_ARRAY));
+	zend_string_release(property_holes_name);
+
+	return class_entry;
+}
+
+static zend_class_entry *register_class_H3_GeoMultiPolygon(void)
+{
+	zend_class_entry ce, *class_entry;
+
+	INIT_NS_CLASS_ENTRY(ce, "H3", "GeoMultiPolygon", class_H3_GeoMultiPolygon_methods);
+	class_entry = zend_register_internal_class_ex(&ce, NULL);
+	class_entry->ce_flags |= ZEND_ACC_FINAL;
+
+	zval property_polygons_default_value;
+	ZVAL_UNDEF(&property_polygons_default_value);
+	zend_string *property_polygons_name = zend_string_init("polygons", sizeof("polygons") - 1, 1);
+	zend_declare_typed_property(class_entry, property_polygons_name, &property_polygons_default_value, ZEND_ACC_PRIVATE, NULL, (zend_type) ZEND_TYPE_INIT_MASK(MAY_BE_ARRAY));
+	zend_string_release(property_polygons_name);
 
 	return class_entry;
 }

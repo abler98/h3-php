@@ -71,6 +71,8 @@ zend_class_entry *H3_H3Index_ce;
 zend_class_entry *H3_H3UniEdge_ce;
 zend_class_entry *H3_GeoCoord_ce;
 zend_class_entry *H3_GeoBoundary_ce;
+zend_class_entry *H3_GeoPolygon_ce;
+zend_class_entry *H3_GeoMultiPolygon_ce;
 
 int max_hex_kring_size(int k)
 {
@@ -103,6 +105,18 @@ void h3_array_to_zend_array(H3Index *in, int size, zval *out)
             add_next_index_object(out, h3_to_obj(in[i]));
         }
     }
+}
+
+void zend_array_to_h3_array(zend_array *arr, H3Index *out)
+{
+    int idx = 0;
+    zval *val;
+
+    // clang-format off
+    ZEND_HASH_FOREACH_VAL(arr, val) {
+        out[idx++] = obj_to_h3(Z_OBJ_P(val));
+    } ZEND_HASH_FOREACH_END();
+    // clang-format on
 }
 
 H3UniEdge obj_to_h3ue(zend_object *obj)
@@ -172,6 +186,58 @@ zend_object *geo_boundary_to_obj(GeoBoundary *boundary)
     efree(val);
 
     return obj;
+}
+
+void zend_array_to_geocoord_array(zend_array *arr, GeoCoord *out)
+{
+    int idx = 0;
+    zval *val;
+
+    // clang-format off
+    ZEND_HASH_FOREACH_VAL(arr, val) {
+        obj_to_geo(Z_OBJ_P(val), &out[idx++]);
+    } ZEND_HASH_FOREACH_END();
+    // clang-format on
+}
+
+void obj_to_geofence(zend_object *obj, Geofence *out)
+{
+    zval *prop;
+    zval rv;
+    zend_array *arr;
+    int idx = 0;
+    zval *val;
+
+    prop = zend_read_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, 1, &rv);
+    arr = Z_ARR_P(prop);
+
+    uint32_t num_verts = zend_array_count(arr);
+    GeoCoord *verts = ecalloc(num_verts, sizeof(GeoCoord));
+
+    // clang-format off
+    ZEND_HASH_FOREACH_VAL(arr, val) {
+        obj_to_geo(Z_OBJ_P(val), &verts[idx++]);
+    } ZEND_HASH_FOREACH_END();
+    // clang-format on
+
+    out->numVerts = num_verts;
+    out->verts = verts;
+
+    efree(verts);
+}
+
+void zend_array_to_geofence_array(zend_array *arr, Geofence *out)
+{
+    int idx = 0;
+    zval *val;
+    Geofence tmp;
+
+    // clang-format off
+    ZEND_HASH_FOREACH_VAL(arr, val) {
+        obj_to_geofence(Z_OBJ_P(val), &tmp);
+        out[idx++] = tmp;
+    } ZEND_HASH_FOREACH_END();
+    // clang-format on
 }
 
 PHP_FUNCTION(degs_to_rads)
@@ -492,6 +558,147 @@ PHP_FUNCTION(indexes_are_neighbors)
     H3Index destination = obj_to_h3(dest);
 
     RETURN_BOOL(h3IndexesAreNeighbors(origin, destination));
+}
+
+PHP_FUNCTION(polyfill)
+{
+    zend_object *polygon;
+    zend_long res;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJ_OF_CLASS(polygon, H3_GeoPolygon_ce)
+        Z_PARAM_LONG(res)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    VALIDATE_H3_RES(res);
+
+    zval *geofence_val;
+    zval rv;
+    zend_object *geofence_obj;
+    zval *geofence_verts_val;
+    zend_array *geofence_verts_arr;
+    zval *holes_val;
+    zend_array *holes_arr;
+
+    geofence_val = zend_read_property(H3_GeoPolygon_ce, polygon, "geofence", sizeof("geofence") - 1, 1, &rv);
+    geofence_obj = Z_OBJ_P(geofence_val);
+
+    geofence_verts_val = zend_read_property(H3_GeoBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, 1, &rv);
+    geofence_verts_arr = Z_ARR_P(geofence_verts_val);
+
+    uint32_t geofence_num_verts = zend_array_count(geofence_verts_arr);
+    GeoCoord *geofence_verts = ecalloc(geofence_num_verts, sizeof(GeoCoord));
+    zend_array_to_geocoord_array(geofence_verts_arr, geofence_verts);
+
+    holes_val = zend_read_property(H3_GeoPolygon_ce, polygon, "holes", sizeof("holes") - 1, 1, &rv);
+    holes_arr = Z_ARR_P(holes_val);
+
+    uint32_t num_holes = zend_array_count(holes_arr);
+    Geofence *holes = ecalloc(num_holes, sizeof(Geofence));
+    zend_array_to_geofence_array(holes_arr, holes);
+
+    GeoPolygon geo_polygon = {
+        .geofence = {
+            .numVerts = geofence_num_verts,
+            .verts = geofence_verts,
+        },
+        .numHoles = num_holes,
+        .holes = holes,
+    };
+
+    int max = maxPolyfillSize(&geo_polygon, res);
+    H3Index *out = ecalloc(max, sizeof(H3Index));
+    polyfill(&geo_polygon, res, out);
+
+    array_init(return_value);
+    h3_array_to_zend_array(out, max, return_value);
+
+    efree(geofence_verts);
+    efree(holes);
+    efree(out);
+}
+
+PHP_FUNCTION(h3_set_to_multi_polygon)
+{
+    zval *indexes;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ARRAY(indexes);
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    zend_array *indexes_arr = Z_ARR_P(indexes);
+    int num_indexes = zend_array_count(indexes_arr);
+    H3Index *set = ecalloc(num_indexes, sizeof(H3Index));
+    zend_array_to_h3_array(indexes_arr, set);
+
+    LinkedGeoPolygon *out = emalloc(sizeof(LinkedGeoPolygon));
+    h3SetToLinkedGeo(set, num_indexes, out);
+
+    LinkedGeoPolygon *polygon = out;
+    LinkedGeoLoop *geo_loop;
+    LinkedGeoCoord *geo_coord;
+
+    zval *polygons = emalloc(sizeof(zval));
+    zval *coords_val = emalloc(sizeof(zval));
+    zval *holes_val = emalloc(sizeof(zval));
+    zval *polygon_val = emalloc(sizeof(zval));
+    zval *geofence_val = emalloc(sizeof(zval));
+    zend_object *geofence_obj;
+    zend_object *polygon_obj;
+    array_init(polygons);
+
+    while (polygon) {
+        array_init(coords_val);
+        array_init(holes_val);
+
+        geo_loop = polygon->first;
+        while (geo_loop) {
+            geo_coord = geo_loop->first;
+            while (geo_coord) {
+                add_next_index_object(coords_val, geo_to_obj(&geo_coord->vertex));
+                geo_coord = geo_coord->next;
+            }
+            geo_loop = geo_loop->next;
+        }
+
+        geofence_obj = zend_objects_new(H3_GeoBoundary_ce);
+        object_properties_init(geofence_obj, H3_GeoBoundary_ce);
+        zend_update_property(H3_GeoBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, coords_val);
+        ZVAL_OBJ(geofence_val, geofence_obj);
+
+        polygon_obj = zend_objects_new(H3_GeoPolygon_ce);
+        object_properties_init(polygon_obj, H3_GeoPolygon_ce);
+        zend_update_property(H3_GeoPolygon_ce, polygon_obj, "geofence", sizeof("geofence") - 1, geofence_val);
+        zend_update_property(H3_GeoPolygon_ce, polygon_obj, "holes", sizeof("holes") - 1, holes_val);
+
+        add_next_index_object(polygons, polygon_obj);
+
+        zend_array_release(Z_ARR_P(coords_val));
+        zend_array_release(Z_ARR_P(holes_val));
+        zend_object_release(geofence_obj);
+
+        polygon = polygon->next;
+    }
+
+    zend_object *result = zend_objects_new(H3_GeoMultiPolygon_ce);
+    object_properties_init(result, H3_GeoMultiPolygon_ce);
+    zend_update_property(H3_GeoMultiPolygon_ce, result, "polygons", sizeof("polygons") - 1, polygons);
+
+    RETVAL_OBJ(result);
+
+    destroyLinkedPolygon(out);
+
+    efree(set);
+    efree(out);
+    efree(polygons);
+    efree(coords_val);
+    efree(holes_val);
+    efree(polygon_val);
+    efree(geofence_val);
 }
 
 PHP_METHOD(H3_H3Index, __construct)
@@ -965,6 +1172,18 @@ PHP_METHOD(H3_H3Index, toGeoBoundary)
     efree(boundary);
 }
 
+PHP_METHOD(H3_H3Index, __toString)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
+
+    char *out = emalloc(H3_STRVAL_LEN);
+    h3ToString(index, out, H3_STRVAL_LEN);
+    RETVAL_STRINGL(out, strlen(out));
+    efree(out);
+}
+
 PHP_METHOD(H3_H3UniEdge, __construct)
 {
     zend_ulong index;
@@ -1117,6 +1336,18 @@ PHP_METHOD(H3_H3UniEdge, toString)
     efree(out);
 }
 
+PHP_METHOD(H3_H3UniEdge, __toString)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+
+    char *out = emalloc(H3_STRVAL_LEN);
+    h3ToString(edge, out, H3_STRVAL_LEN);
+    RETVAL_STRINGL(out, strlen(out));
+    efree(out);
+}
+
 PHP_METHOD(H3_GeoCoord, __construct)
 {
     double lat, lon;
@@ -1181,6 +1412,85 @@ PHP_METHOD(H3_GeoBoundary, getVertices)
     RETURN_ARR(Z_ARR_P(prop));
 }
 
+PHP_METHOD(H3_GeoPolygon, __construct)
+{
+    zend_object *geofence;
+    zval *holes = NULL;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+        Z_PARAM_OBJ_OF_CLASS(geofence, H3_GeoBoundary_ce)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_ARRAY_OR_NULL(holes)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    zval *geofence_val = emalloc(sizeof(zval));
+    ZVAL_OBJ(geofence_val, geofence);
+    zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "geofence", sizeof("geofence") - 1, geofence_val);
+    efree(geofence_val);
+
+    if (holes) {
+        zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "holes", sizeof("holes") - 1, holes);
+    }
+    else {
+        zend_array *arr = zend_new_array(0);
+        zval arr_val;
+        ZVAL_ARR(&arr_val, arr);
+        zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "holes", sizeof("holes") - 1, &arr_val);
+        zend_array_release(arr);
+    }
+}
+
+PHP_METHOD(H3_GeoPolygon, getGeofence)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "geofence", sizeof("geofence") - 1, 1, &rv);
+
+    RETURN_ZVAL(prop, 1, 0);
+}
+
+PHP_METHOD(H3_GeoPolygon, getHoles)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "holes", sizeof("holes") - 1, 1, &rv);
+
+    RETURN_ZVAL(prop, 1, 0);
+}
+
+PHP_METHOD(H3_GeoMultiPolygon, __construct)
+{
+    zval *polygons;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ARRAY(polygons)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    zend_update_property(H3_GeoMultiPolygon_ce, Z_OBJ_P(ZEND_THIS), "polygons", sizeof("polygons") - 1, polygons);
+}
+
+PHP_METHOD(H3_GeoMultiPolygon, getPolygons)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_GeoMultiPolygon_ce, Z_OBJ_P(ZEND_THIS), "polygons", sizeof("polygons") - 1, 1, &rv);
+
+    RETURN_ARR(Z_ARR_P(prop));
+}
+
 // clang-format off
 PHP_INI_BEGIN()
     STD_PHP_INI_ENTRY("h3.validate_res", "On", PHP_INI_ALL, OnUpdateBool, validate_res, zend_h3_globals, h3_globals)
@@ -1213,6 +1523,8 @@ PHP_MINIT_FUNCTION(h3)
     H3_H3UniEdge_ce = register_class_H3_H3UniEdge();
     H3_GeoCoord_ce = register_class_H3_GeoCoord();
     H3_GeoBoundary_ce = register_class_H3_GeoBoundary();
+    H3_GeoPolygon_ce = register_class_H3_GeoPolygon();
+    H3_GeoMultiPolygon_ce = register_class_H3_GeoMultiPolygon();
 
     return SUCCESS;
 }
