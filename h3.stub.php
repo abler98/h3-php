@@ -68,6 +68,7 @@ function polyfill(GeoPolygon $polygon, int $res): array {}
 
 /**
  * @param H3Index[] $indexes
+ * @throws H3Exception
  */
 function h3_set_to_multi_polygon(array $indexes): GeoMultiPolygon {}
 
