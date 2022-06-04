@@ -72,6 +72,10 @@ function polyfill(GeoPolygon $polygon, int $res): array {}
  */
 function h3_set_to_multi_polygon(array $indexes): GeoMultiPolygon {}
 
+function experimental_h3_to_local_ij(H3Index $origin, H3Index $h): CoordIJ {}
+
+function experimental_local_ij_to_h3(H3Index $origin, CoordIJ $ij): H3Index {}
+
 final class H3Exception extends \RuntimeException {}
 
 final class H3Index {
@@ -271,4 +275,17 @@ final class GeoMultiPolygon {
      * @return GeoPolygon[]
      */
     public function getPolygons(): array {}
+}
+
+final class CoordIJ {
+
+    private int $i;
+
+    private int $j;
+
+    public function __construct(int $i, int $j) {}
+
+    public function getI(): int {}
+
+    public function getJ(): int {}
 }

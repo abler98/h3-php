@@ -68,6 +68,7 @@ zend_class_entry *H3_GeoCoord_ce;
 zend_class_entry *H3_GeoBoundary_ce;
 zend_class_entry *H3_GeoPolygon_ce;
 zend_class_entry *H3_GeoMultiPolygon_ce;
+zend_class_entry *H3_CoordIJ_ce;
 
 int max_hex_kring_size(int k)
 {
@@ -740,6 +741,56 @@ PHP_FUNCTION(h3_set_to_multi_polygon)
     efree(holes_val);
     efree(polygon_val);
     efree(geofence_val);
+}
+
+PHP_FUNCTION(experimental_h3_to_local_ij)
+{
+    zend_object *origin_obj;
+    zend_object *h_obj;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJ_OF_CLASS(origin_obj, H3_H3Index_ce)
+        Z_PARAM_OBJ_OF_CLASS(h_obj, H3_H3Index_ce)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    CoordIJ ij;
+    experimentalH3ToLocalIj(obj_to_h3(origin_obj), obj_to_h3(h_obj), &ij);
+
+    zend_object *ij_obj = zend_objects_new(H3_CoordIJ_ce);
+    object_properties_init(ij_obj, H3_CoordIJ_ce);
+    zend_update_property_long(H3_CoordIJ_ce, ij_obj, "i", sizeof("i") - 1, ij.i);
+    zend_update_property_long(H3_CoordIJ_ce, ij_obj, "j", sizeof("j") - 1, ij.j);
+
+    RETURN_OBJ(ij_obj);
+}
+
+PHP_FUNCTION(experimental_local_ij_to_h3)
+{
+    zend_object *origin_obj;
+    zend_object *ij_obj;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJ_OF_CLASS(origin_obj, H3_H3Index_ce)
+        Z_PARAM_OBJ_OF_CLASS(ij_obj, H3_CoordIJ_ce)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    CoordIJ ij;
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_CoordIJ_ce, ij_obj, "i", sizeof("i") - 1, 1, &rv);
+    ij.i = Z_LVAL_P(prop);
+    prop = zend_read_property(H3_CoordIJ_ce, ij_obj, "j", sizeof("j") - 1, 1, &rv);
+    ij.j = Z_LVAL_P(prop);
+
+    H3Index result;
+    experimentalLocalIjToH3(obj_to_h3(origin_obj), &ij, &result);
+
+    RETURN_OBJ(h3_to_obj(result));
 }
 
 PHP_METHOD(H3_H3Index, __construct)
@@ -1532,6 +1583,46 @@ PHP_METHOD(H3_GeoMultiPolygon, getPolygons)
     RETURN_ARR(Z_ARR_P(prop));
 }
 
+PHP_METHOD(H3_CoordIJ, __construct)
+{
+    zend_long i;
+    zend_long j;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_LONG(i)
+        Z_PARAM_LONG(j)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    zend_update_property_long(H3_CoordIJ_ce, Z_OBJ_P(ZEND_THIS), "i", sizeof("i") - 1, i);
+    zend_update_property_long(H3_CoordIJ_ce, Z_OBJ_P(ZEND_THIS), "j", sizeof("j") - 1, j);
+}
+
+PHP_METHOD(H3_CoordIJ, getI)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_CoordIJ_ce, Z_OBJ_P(ZEND_THIS), "i", sizeof("i") - 1, 1, &rv);
+
+    RETURN_LONG(Z_LVAL_P(prop));
+}
+
+PHP_METHOD(H3_CoordIJ, getJ)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    zval *prop;
+    zval rv;
+
+    prop = zend_read_property(H3_CoordIJ_ce, Z_OBJ_P(ZEND_THIS), "j", sizeof("j") - 1, 1, &rv);
+
+    RETURN_LONG(Z_LVAL_P(prop));
+}
+
 // clang-format off
 PHP_INI_BEGIN()
     STD_PHP_INI_ENTRY("h3.validate_res", "On", PHP_INI_ALL, OnUpdateBool, validate_res, zend_h3_globals, h3_globals)
@@ -1566,6 +1657,7 @@ PHP_MINIT_FUNCTION(h3)
     H3_GeoBoundary_ce = register_class_H3_GeoBoundary();
     H3_GeoPolygon_ce = register_class_H3_GeoPolygon();
     H3_GeoMultiPolygon_ce = register_class_H3_GeoMultiPolygon();
+    H3_CoordIJ_ce = register_class_H3_CoordIJ();
 
     return SUCCESS;
 }

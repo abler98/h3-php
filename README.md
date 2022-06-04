@@ -94,8 +94,8 @@ sudo make install
 | h3Line()                  | H3\line()                       |
 | h3LineSize()              | -                               |
 | h3Distance()              | H3\distance()                   |
-| experimentalH3ToLocalIj() | Not implemented                 |
-| experimentalLocalIjToH3() | Not implemented                 |
+| experimentalH3ToLocalIj() | H3\experimental_h3_to_local_ij  |
+| experimentalLocalIjToH3() | H3\experimental_local_ij_to_h3  |
 
 ## Hierarchy
 | C                     | PHP                         |
@@ -109,12 +109,12 @@ sudo make install
 | maxUncompactSize()    | -                           |
 
 ## Regions
-| C                                             | PHP                                  |
-|-----------------------------------------------|--------------------------------------|
-| polyfill()                                    | H3\polyfill()                        |
-| maxPolyfillSize()                             | -                                    |
-| h3SetToLinkedGeo()                            | H3\h3_set_to_multi_polygon()         |
-| destroyLinkedPolygon()                        | -                                    |
+| C                      | PHP                          |
+|------------------------|------------------------------|
+| polyfill()             | H3\polyfill()                |
+| maxPolyfillSize()      | -                            |
+| h3SetToLinkedGeo()     | H3\h3_set_to_multi_polygon() |
+| destroyLinkedPolygon() | -                            |
 
 ## Unidirectional edges
 | C                                             | PHP                                  |
