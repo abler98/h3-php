@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 18578ddc3025041e8cc61d1c50c2a30cbb14a1a7 */
+ * Stub hash: 434f4efd1e468e6d327cc9df6cba25b92f776153 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)
@@ -124,6 +124,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_getCellArea, 0,
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_isNeighborTo, 0, 1, _IS_BOOL, 0)
+	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_getLineTo, 0, 1, IS_ARRAY, 0)
+	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_getDistanceTo, 0, 1, IS_LONG, 0)
 	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
 ZEND_END_ARG_INFO()
 
@@ -258,6 +266,8 @@ ZEND_METHOD(H3_H3Index, hexRing);
 ZEND_METHOD(H3_H3Index, hexRangeDistances);
 ZEND_METHOD(H3_H3Index, getCellArea);
 ZEND_METHOD(H3_H3Index, isNeighborTo);
+ZEND_METHOD(H3_H3Index, getLineTo);
+ZEND_METHOD(H3_H3Index, getDistanceTo);
 ZEND_METHOD(H3_H3Index, getUnidirectionalEdges);
 ZEND_METHOD(H3_H3Index, getUnidirectionalEdge);
 ZEND_METHOD(H3_H3Index, toParent);
@@ -340,6 +350,8 @@ static const zend_function_entry class_H3_H3Index_methods[] = {
 	ZEND_ME(H3_H3Index, hexRangeDistances, arginfo_class_H3_H3Index_hexRangeDistances, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getCellArea, arginfo_class_H3_H3Index_getCellArea, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, isNeighborTo, arginfo_class_H3_H3Index_isNeighborTo, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, getLineTo, arginfo_class_H3_H3Index_getLineTo, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, getDistanceTo, arginfo_class_H3_H3Index_getDistanceTo, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getUnidirectionalEdges, arginfo_class_H3_H3Index_getUnidirectionalEdges, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getUnidirectionalEdge, arginfo_class_H3_H3Index_getUnidirectionalEdge, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toParent, arginfo_class_H3_H3Index_toParent, ZEND_ACC_PUBLIC)

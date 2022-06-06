@@ -141,6 +141,13 @@ final class H3Index {
     public function isNeighborTo(H3Index $destination): bool {}
 
     /**
+     * @return H3Index[]
+     */
+    public function getLineTo(H3Index $destination): array {}
+
+    public function getDistanceTo(H3Index $destination): int {}
+
+    /**
      * @return H3UniEdge[]
      */
     public function getUnidirectionalEdges(): array {}

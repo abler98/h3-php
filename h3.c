@@ -260,6 +260,27 @@ int zend_array_to_geofence_array(zend_array *arr, Geofence *out)
     return 0;
 }
 
+void h3_line(zend_object *start, zend_object *end, INTERNAL_FUNCTION_PARAMETERS)
+{
+    H3Index startIndex = obj_to_h3(start);
+    H3Index endIndex = obj_to_h3(end);
+
+    int size = h3LineSize(startIndex, endIndex);
+
+    if (size < 0) {
+        H3_THROW("Failed to caluclate line size", H3_ERR_CODE_LINE_SIZE_ERROR);
+        RETURN_THROWS();
+    }
+
+    H3Index *out = ecalloc(size, sizeof(H3Index));
+    h3Line(startIndex, endIndex, out);
+
+    array_init(return_value);
+    h3_array_to_zend_array(out, size, return_value);
+
+    efree(out);
+}
+
 PHP_FUNCTION(degs_to_rads)
 {
     double degrees;
@@ -532,23 +553,7 @@ PHP_FUNCTION(line)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    H3Index startIndex = obj_to_h3(start);
-    H3Index endIndex = obj_to_h3(end);
-
-    int size = h3LineSize(startIndex, endIndex);
-
-    if (size < 0) {
-        H3_THROW("Failed to caluclate line size", H3_ERR_CODE_LINE_SIZE_ERROR);
-        RETURN_THROWS();
-    }
-
-    H3Index *out = ecalloc(size, sizeof(H3Index));
-    h3Line(startIndex, endIndex, out);
-
-    array_init(return_value);
-    h3_array_to_zend_array(out, size, return_value);
-
-    efree(out);
+    h3_line(start, end, INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 
 PHP_FUNCTION(distance)
@@ -1123,6 +1128,32 @@ PHP_METHOD(H3_H3Index, isNeighborTo)
     H3Index destination = obj_to_h3(dest);
 
     RETURN_BOOL(h3IndexesAreNeighbors(origin, destination));
+}
+
+PHP_METHOD(H3_H3Index, getLineTo)
+{
+    zend_object *dest;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    h3_line(Z_OBJ_P(ZEND_THIS), dest, INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+PHP_METHOD(H3_H3Index, getDistanceTo)
+{
+    zend_object *dest;
+
+    // clang-format off
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJ_OF_CLASS(dest, H3_H3Index_ce)
+    ZEND_PARSE_PARAMETERS_END();
+    // clang-format on
+
+    RETURN_LONG(h3Distance(obj_to_h3(Z_OBJ_P(ZEND_THIS)), obj_to_h3(dest)));
 }
 
 PHP_METHOD(H3_H3Index, getUnidirectionalEdges)

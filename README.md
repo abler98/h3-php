@@ -82,20 +82,20 @@ sudo make install
 | maxFaceCount()    | -                           |
 
 ## Traversal
-| C                         | PHP                             |
-|---------------------------|---------------------------------|
-| kRing()                   | H3\H3Index::kRing()             |
-| maxKringSize()            | -                               |
-| kRingDistances()          | H3\H3Index::kRingDistances()    |
-| hexRange()                | H3\H3Index::hexRange()          |
-| hexRangeDistances()       | H3\H3Index::hexRangeDistances() |
-| hexRanges()               | H3\H3Index::hexRanges()         |
-| hexRing()                 | H3\H3Index::hexRing()           |
-| h3Line()                  | H3\line()                       |
-| h3LineSize()              | -                               |
-| h3Distance()              | H3\distance()                   |
-| experimentalH3ToLocalIj() | H3\experimental_h3_to_local_ij  |
-| experimentalLocalIjToH3() | H3\experimental_local_ij_to_h3  |
+| C                         | PHP                                           |
+|---------------------------|-----------------------------------------------|
+| kRing()                   | H3\H3Index::kRing()                           |
+| maxKringSize()            | -                                             |
+| kRingDistances()          | H3\H3Index::kRingDistances()                  |
+| hexRange()                | H3\H3Index::hexRange()                        |
+| hexRangeDistances()       | H3\H3Index::hexRangeDistances()               |
+| hexRanges()               | H3\H3Index::hexRanges()                       |
+| hexRing()                 | H3\H3Index::hexRing()                         |
+| h3Line()                  | H3\line()<br/>H3\H3Index::getLineTo()         |
+| h3LineSize()              | -                                             |
+| h3Distance()              | H3\distance()<br/>H3\H3Index::getDistanceTo() |
+| experimentalH3ToLocalIj() | H3\experimental_h3_to_local_ij                |
+| experimentalLocalIjToH3() | H3\experimental_local_ij_to_h3                |
 
 ## Hierarchy
 | C                     | PHP                         |
@@ -117,16 +117,16 @@ sudo make install
 | destroyLinkedPolygon() | -                            |
 
 ## Unidirectional edges
-| C                                             | PHP                                  |
-|-----------------------------------------------|--------------------------------------|
-| h3IndexesAreNeighbors()                       | H3\H3Index::isNeighborTo()           |
-| getH3UnidirectionalEdge()                     | H3\H3Index::getUnidirectionalEdge()  |
-| h3UnidirectionalEdgeIsValid()                 | H3\UniEdge::isValid()                |
-| getOriginH3IndexFromUnidirectionalEdge()      | H3\UniEdge::getOrigin()              |
-| getDestinationH3IndexFromUnidirectionalEdge() | H3\UniEdge::getDestination()         |
-| getH3IndexesFromUnidirectionalEdge()          | H3\UniEdge::getIndexes()             |
-| getH3UnidirectionalEdgesFromHexagon()         | H3\H3Index::getUnidirectionalEdges() |
-| getH3UnidirectionalEdgeBoundary()             | H3\UniEdge::getBoundary()            |
+| C                                             | PHP                                                     |
+|-----------------------------------------------|---------------------------------------------------------|
+| h3IndexesAreNeighbors()                       | H3\indexes_are_neighbors<br/>H3\H3Index::isNeighborTo() |
+| getH3UnidirectionalEdge()                     | H3\H3Index::getUnidirectionalEdge()                     |
+| h3UnidirectionalEdgeIsValid()                 | H3\UniEdge::isValid()                                   |
+| getOriginH3IndexFromUnidirectionalEdge()      | H3\UniEdge::getOrigin()                                 |
+| getDestinationH3IndexFromUnidirectionalEdge() | H3\UniEdge::getDestination()                            |
+| getH3IndexesFromUnidirectionalEdge()          | H3\UniEdge::getIndexes()                                |
+| getH3UnidirectionalEdgesFromHexagon()         | H3\H3Index::getUnidirectionalEdges()                    |
+| getH3UnidirectionalEdgeBoundary()             | H3\UniEdge::getBoundary()                               |
 
 ## Miscellaneous
 | C                     | PHP                       |
