@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 434f4efd1e468e6d327cc9df6cba25b92f776153 */
+ * Stub hash: 438fc6281b05d84e505cb265790171f28d5e9303 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)
@@ -222,6 +222,8 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_GeoMultiPolygon_getPolygons arginfo_H3_get_res0_indexes
 
+#define arginfo_class_H3_GeoMultiPolygon_toGeoJson arginfo_H3_get_res0_indexes
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_CoordIJ___construct, 0, 0, 2)
 	ZEND_ARG_TYPE_INFO(0, i, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, j, IS_LONG, 0)
@@ -300,6 +302,7 @@ ZEND_METHOD(H3_GeoPolygon, getGeofence);
 ZEND_METHOD(H3_GeoPolygon, getHoles);
 ZEND_METHOD(H3_GeoMultiPolygon, __construct);
 ZEND_METHOD(H3_GeoMultiPolygon, getPolygons);
+ZEND_METHOD(H3_GeoMultiPolygon, toGeoJson);
 ZEND_METHOD(H3_CoordIJ, __construct);
 ZEND_METHOD(H3_CoordIJ, getI);
 ZEND_METHOD(H3_CoordIJ, getJ);
@@ -409,6 +412,7 @@ static const zend_function_entry class_H3_GeoPolygon_methods[] = {
 static const zend_function_entry class_H3_GeoMultiPolygon_methods[] = {
 	ZEND_ME(H3_GeoMultiPolygon, __construct, arginfo_class_H3_GeoMultiPolygon___construct, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_GeoMultiPolygon, getPolygons, arginfo_class_H3_GeoMultiPolygon_getPolygons, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_GeoMultiPolygon, toGeoJson, arginfo_class_H3_GeoMultiPolygon_toGeoJson, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 

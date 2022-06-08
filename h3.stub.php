@@ -282,6 +282,12 @@ final class GeoMultiPolygon {
      * @return GeoPolygon[]
      */
     public function getPolygons(): array {}
+
+    /**
+     * @return float[][][][]
+     * @throws H3Exception if this object is not valid
+     */
+    public function toGeoJson(): array {}
 }
 
 final class CoordIJ {

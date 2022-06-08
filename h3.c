@@ -108,15 +108,15 @@ int zend_array_to_h3_array(zend_array *arr, H3Index *out)
     int idx = 0;
     zval *val;
 
-    // clang-format off
-    ZEND_HASH_FOREACH_VAL(arr, val) {
+    ZEND_HASH_FOREACH_VAL(arr, val)
+    {
         if (OBJ_IS_A(val, H3_H3Index_ce)) {
-            out[idx++] = obj_to_h3(Z_OBJ_P(val));   
+            out[idx++] = obj_to_h3(Z_OBJ_P(val));
         } else {
             return -1;
         }
-    } ZEND_HASH_FOREACH_END();
-    // clang-format on
+    }
+    ZEND_HASH_FOREACH_END();
 
     return 0;
 }
@@ -173,19 +173,19 @@ zend_object *geo_to_obj(GeoCoord *geo)
 
 zend_object *geo_boundary_to_obj(GeoBoundary *boundary)
 {
-    zval *val = emalloc(sizeof(zval));
-    array_init_size(val, boundary->numVerts);
+    zval val;
+    array_init_size(&val, boundary->numVerts);
 
     for (int i = 0; i < boundary->numVerts; i++) {
-        add_next_index_object(val, geo_to_obj(&boundary->verts[i]));
+        add_next_index_object(&val, geo_to_obj(&boundary->verts[i]));
     }
 
     zend_object *obj = zend_objects_new(H3_GeoBoundary_ce);
-    object_properties_init(obj, H3_GeoCoord_ce);
+    object_properties_init(obj, H3_GeoBoundary_ce);
 
-    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, val);
+    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &val);
 
-    efree(val);
+    zval_ptr_dtor(&val);
 
     return obj;
 }
@@ -195,15 +195,15 @@ int zend_array_to_geocoord_array(zend_array *arr, GeoCoord *out)
     int idx = 0;
     zval *val;
 
-    // clang-format off
-    ZEND_HASH_FOREACH_VAL(arr, val) {
+    ZEND_HASH_FOREACH_VAL(arr, val)
+    {
         if (OBJ_IS_A(val, H3_GeoCoord_ce)) {
             obj_to_geo(Z_OBJ_P(val), &out[idx++]);
         } else {
             return -1;
         }
-    } ZEND_HASH_FOREACH_END();
-    // clang-format on
+    }
+    ZEND_HASH_FOREACH_END();
 
     return 0;
 }
@@ -222,16 +222,16 @@ int obj_to_geofence(zend_object *obj, Geofence *out)
     uint32_t num_verts = zend_array_count(arr);
     GeoCoord *verts = ecalloc(num_verts, sizeof(GeoCoord));
 
-    // clang-format off
-    ZEND_HASH_FOREACH_VAL(arr, val) {
+    ZEND_HASH_FOREACH_VAL(arr, val)
+    {
         if (OBJ_IS_A(val, H3_GeoCoord_ce)) {
             obj_to_geo(Z_OBJ_P(val), &verts[idx++]);
         } else {
             efree(verts);
             return -1;
         }
-    } ZEND_HASH_FOREACH_END();
-    // clang-format on
+    }
+    ZEND_HASH_FOREACH_END();
 
     out->numVerts = num_verts;
     out->verts = verts;
@@ -247,15 +247,15 @@ int zend_array_to_geofence_array(zend_array *arr, Geofence *out)
     zval *val;
     Geofence tmp;
 
-    // clang-format off
-    ZEND_HASH_FOREACH_VAL(arr, val) {
+    ZEND_HASH_FOREACH_VAL(arr, val)
+    {
         if (OBJ_IS_A(val, H3_GeoBoundary_ce) && obj_to_geofence(Z_OBJ_P(val), &tmp) == 0) {
             out[idx++] = tmp;
         } else {
             return -1;
         }
-    } ZEND_HASH_FOREACH_END();
-    // clang-format on
+    }
+    ZEND_HASH_FOREACH_END();
 
     return 0;
 }
@@ -279,6 +279,140 @@ void h3_line(zend_object *start, zend_object *end, INTERNAL_FUNCTION_PARAMETERS)
     h3_array_to_zend_array(out, size, return_value);
 
     efree(out);
+}
+
+int geofence_obj_to_geojson_arr(zend_object *geofence_obj, zval *geojson_geofence_val)
+{
+    zval *prop;
+    zval rv;
+    zend_array *geofence_verts_arr;
+    zval *geofence_vert_val;
+    zend_object *coord_obj;
+    zval coords_val;
+    zval first_coords_val;
+    int idx = 0;
+    uint32_t verts_count;
+
+    prop = zend_read_property(H3_GeoBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, 1, &rv);
+    geofence_verts_arr = Z_ARRVAL_P(prop);
+    verts_count = zend_array_count(geofence_verts_arr);
+
+    if (verts_count == 0) {
+        return -1;
+    }
+
+    array_init_size(geojson_geofence_val, 1 + verts_count);
+
+    ZEND_HASH_FOREACH_VAL(geofence_verts_arr, geofence_vert_val)
+    {
+        if (Z_TYPE_P(geofence_vert_val) == IS_OBJECT && OBJ_IS_A(geofence_vert_val, H3_GeoCoord_ce)) {
+            coord_obj = Z_OBJ_P(geofence_vert_val);
+            array_init_size(&coords_val, 2);
+            prop = zend_read_property(H3_GeoCoord_ce, coord_obj, "lon", sizeof("lon") - 1, 1, &rv);
+            add_next_index_double(&coords_val, Z_DVAL_P(prop));
+            prop = zend_read_property(H3_GeoCoord_ce, coord_obj, "lat", sizeof("lat") - 1, 1, &rv);
+            add_next_index_double(&coords_val, Z_DVAL_P(prop));
+            add_next_index_zval(geojson_geofence_val, &coords_val);
+            if (idx++ == 0) {
+                ZVAL_COPY(&first_coords_val, &coords_val);
+            }
+        } else {
+            zval_ptr_dtor(geojson_geofence_val);
+            return -1;
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+
+    add_next_index_zval(geojson_geofence_val, &first_coords_val);
+
+    return 0;
+}
+
+int multi_polygon_obj_to_geo_json(zend_object *obj, zval *return_value)
+{
+    zval *prop;
+    zval rv;
+    zend_array *polygons_arr;
+    zval *val;
+    zend_object *polygon_obj;
+    zend_object *geofence_obj;
+    zend_array *holes_arr;
+    zval geojson_polygon_val;
+    zval coords_val;
+    zval *hole_val;
+
+    prop = zend_read_property(H3_GeoMultiPolygon_ce, obj, "polygons", sizeof("polygons") - 1, 1, &rv);
+    polygons_arr = Z_ARRVAL_P(prop);
+
+    array_init_size(return_value, zend_array_count(polygons_arr));
+
+    ZEND_HASH_FOREACH_VAL(polygons_arr, val)
+    {
+        if (Z_TYPE_P(val) == IS_OBJECT && OBJ_IS_A(val, H3_GeoPolygon_ce)) {
+            polygon_obj = Z_OBJ_P(val);
+
+            prop = zend_read_property(H3_GeoPolygon_ce, polygon_obj, "geofence", sizeof("geofence") - 1, 1, &rv);
+            geofence_obj = Z_OBJ_P(prop);
+
+            prop = zend_read_property(H3_GeoPolygon_ce, polygon_obj, "holes", sizeof("holes") - 1, 1, &rv);
+            holes_arr = Z_ARRVAL_P(prop);
+
+            array_init_size(&geojson_polygon_val, 1 + zend_array_count(holes_arr));
+
+            if (geofence_obj_to_geojson_arr(geofence_obj, &coords_val) == 0) {
+                add_next_index_zval(&geojson_polygon_val, &coords_val);
+            } else {
+                zval_ptr_dtor(&geojson_polygon_val);
+                return -1;
+            }
+
+            ZEND_HASH_FOREACH_VAL(holes_arr, hole_val)
+            {
+                if (Z_TYPE_P(hole_val) == IS_OBJECT && OBJ_IS_A(hole_val, H3_GeoBoundary_ce)) {
+                    if (geofence_obj_to_geojson_arr(Z_OBJ_P(hole_val), &coords_val) == 0) {
+                        add_next_index_zval(&geojson_polygon_val, &coords_val);
+                    } else {
+                        zval_ptr_dtor(&geojson_polygon_val);
+                        return -1;
+                    }
+                } else {
+                    zval_ptr_dtor(&geojson_polygon_val);
+                    return -1;
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+
+            add_next_index_zval(return_value, &geojson_polygon_val);
+        } else {
+            return -1;
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+
+    return 0;
+}
+
+zend_object *geo_loop_to_geo_boundary_obj(LinkedGeoLoop *geo_loop)
+{
+    LinkedGeoCoord *geo_coord;
+    zval coords_val;
+    zend_object *obj;
+
+    array_init(&coords_val);
+
+    geo_coord = geo_loop->first;
+    while (geo_coord) {
+        add_next_index_object(&coords_val, geo_to_obj(&geo_coord->vertex));
+        geo_coord = geo_coord->next;
+    }
+
+    obj = zend_objects_new(H3_GeoBoundary_ce);
+    object_properties_init(obj, H3_GeoBoundary_ce);
+    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &coords_val);
+
+    Z_TRY_DELREF(coords_val);
+
+    return obj;
 }
 
 PHP_FUNCTION(degs_to_rads)
@@ -687,65 +821,56 @@ PHP_FUNCTION(h3_set_to_multi_polygon)
     LinkedGeoLoop *geo_loop;
     LinkedGeoCoord *geo_coord;
 
-    zval *polygons = emalloc(sizeof(zval));
-    zval *coords_val = emalloc(sizeof(zval));
-    zval *holes_val = emalloc(sizeof(zval));
-    zval *polygon_val = emalloc(sizeof(zval));
-    zval *geofence_val = emalloc(sizeof(zval));
+    zval polygons_val;
+    zval holes_val;
+    zval polygon_val;
+    zval geofence_val;
     zend_object *geofence_obj;
     zend_object *polygon_obj;
-    array_init(polygons);
+    int geo_loop_idx;
+
+    array_init(&polygons_val);
 
     while (polygon) {
-        array_init(coords_val);
-        array_init(holes_val);
+        array_init(&holes_val);
 
         geo_loop = polygon->first;
+        geo_loop_idx = 0;
         while (geo_loop) {
-            geo_coord = geo_loop->first;
-            while (geo_coord) {
-                add_next_index_object(coords_val, geo_to_obj(&geo_coord->vertex));
-                geo_coord = geo_coord->next;
+            geofence_obj = geo_loop_to_geo_boundary_obj(geo_loop);
+            if (geo_loop_idx++ == 0) {
+                ZVAL_OBJ(&geofence_val, geofence_obj);
+            } else {
+                add_next_index_object(&holes_val, geofence_obj);
             }
             geo_loop = geo_loop->next;
         }
 
-        geofence_obj = zend_objects_new(H3_GeoBoundary_ce);
-        object_properties_init(geofence_obj, H3_GeoBoundary_ce);
-        zend_update_property(H3_GeoBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, coords_val);
-        ZVAL_OBJ(geofence_val, geofence_obj);
-
         polygon_obj = zend_objects_new(H3_GeoPolygon_ce);
         object_properties_init(polygon_obj, H3_GeoPolygon_ce);
-        zend_update_property(H3_GeoPolygon_ce, polygon_obj, "geofence", sizeof("geofence") - 1, geofence_val);
-        zend_update_property(H3_GeoPolygon_ce, polygon_obj, "holes", sizeof("holes") - 1, holes_val);
+        zend_update_property(H3_GeoPolygon_ce, polygon_obj, "geofence", sizeof("geofence") - 1, &geofence_val);
+        zend_update_property(H3_GeoPolygon_ce, polygon_obj, "holes", sizeof("holes") - 1, &holes_val);
 
-        add_next_index_object(polygons, polygon_obj);
+        add_next_index_object(&polygons_val, polygon_obj);
 
-        zend_array_release(Z_ARR_P(coords_val));
-        zend_array_release(Z_ARR_P(holes_val));
-        zend_object_release(geofence_obj);
+        zval_ptr_dtor(&holes_val);
+        zval_ptr_dtor(&geofence_val);
 
         polygon = polygon->next;
     }
 
     zend_object *result = zend_objects_new(H3_GeoMultiPolygon_ce);
     object_properties_init(result, H3_GeoMultiPolygon_ce);
-    zend_update_property(H3_GeoMultiPolygon_ce, result, "polygons", sizeof("polygons") - 1, polygons);
-
-    RETVAL_OBJ(result);
+    zend_update_property(H3_GeoMultiPolygon_ce, result, "polygons", sizeof("polygons") - 1, &polygons_val);
 
     destroyLinkedPolygon(out);
 
-    zend_array_release(Z_ARR_P(polygons));
+    zval_ptr_dtor(&polygons_val);
 
     efree(set);
     efree(out);
-    efree(polygons);
-    efree(coords_val);
-    efree(holes_val);
-    efree(polygon_val);
-    efree(geofence_val);
+
+    RETURN_OBJ(result);
 }
 
 PHP_FUNCTION(experimental_h3_to_local_ij)
@@ -1495,7 +1620,7 @@ PHP_METHOD(H3_GeoCoord, getLat)
 
     prop = zend_read_property(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lat", sizeof("lat") - 1, 1, &rv);
 
-    RETURN_ZVAL(prop, 1, 0);
+    RETURN_DOUBLE(Z_DVAL_P(prop));
 }
 
 PHP_METHOD(H3_GeoCoord, getLon)
@@ -1507,7 +1632,7 @@ PHP_METHOD(H3_GeoCoord, getLon)
 
     prop = zend_read_property(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lon", sizeof("lon") - 1, 1, &rv);
 
-    RETURN_ZVAL(prop, 1, 0);
+    RETURN_DOUBLE(Z_DVAL_P(prop));
 }
 
 PHP_METHOD(H3_GeoBoundary, __construct)
@@ -1532,6 +1657,8 @@ PHP_METHOD(H3_GeoBoundary, getVertices)
 
     prop = zend_read_property(H3_GeoBoundary_ce, Z_OBJ_P(ZEND_THIS), "vertices", sizeof("vertices") - 1, 1, &rv);
 
+    Z_TRY_ADDREF_P(prop);
+
     RETURN_ARR(Z_ARR_P(prop));
 }
 
@@ -1539,6 +1666,7 @@ PHP_METHOD(H3_GeoPolygon, __construct)
 {
     zend_object *geofence;
     zval *holes = NULL;
+    zval geofence_val;
 
     // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 2)
@@ -1548,20 +1676,16 @@ PHP_METHOD(H3_GeoPolygon, __construct)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    zval *geofence_val = emalloc(sizeof(zval));
-    ZVAL_OBJ(geofence_val, geofence);
-    zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "geofence", sizeof("geofence") - 1, geofence_val);
-    efree(geofence_val);
+    ZVAL_OBJ(&geofence_val, geofence);
+    zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "geofence", sizeof("geofence") - 1, &geofence_val);
 
     if (holes) {
         zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "holes", sizeof("holes") - 1, holes);
-    }
-    else {
-        zend_array *arr = zend_new_array(0);
+    } else {
         zval arr_val;
-        ZVAL_ARR(&arr_val, arr);
+        array_init(&arr_val);
         zend_update_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "holes", sizeof("holes") - 1, &arr_val);
-        zend_array_release(arr);
+        zval_ptr_dtor(&arr_val);
     }
 }
 
@@ -1574,7 +1698,9 @@ PHP_METHOD(H3_GeoPolygon, getGeofence)
 
     prop = zend_read_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "geofence", sizeof("geofence") - 1, 1, &rv);
 
-    RETURN_ZVAL(prop, 1, 0);
+    Z_TRY_ADDREF_P(prop);
+
+    RETURN_OBJ(Z_OBJ_P(prop));
 }
 
 PHP_METHOD(H3_GeoPolygon, getHoles)
@@ -1586,7 +1712,9 @@ PHP_METHOD(H3_GeoPolygon, getHoles)
 
     prop = zend_read_property(H3_GeoPolygon_ce, Z_OBJ_P(ZEND_THIS), "holes", sizeof("holes") - 1, 1, &rv);
 
-    RETURN_ZVAL(prop, 1, 0);
+    Z_TRY_ADDREF_P(prop);
+
+    RETURN_ARR(Z_ARRVAL_P(prop));
 }
 
 PHP_METHOD(H3_GeoMultiPolygon, __construct)
@@ -1611,7 +1739,19 @@ PHP_METHOD(H3_GeoMultiPolygon, getPolygons)
 
     prop = zend_read_property(H3_GeoMultiPolygon_ce, Z_OBJ_P(ZEND_THIS), "polygons", sizeof("polygons") - 1, 1, &rv);
 
-    RETURN_ARR(Z_ARR_P(prop));
+    Z_TRY_ADDREF_P(prop);
+
+    RETURN_ARR(Z_ARRVAL_P(prop));
+}
+
+PHP_METHOD(H3_GeoMultiPolygon, toGeoJson)
+{
+    ZEND_PARSE_PARAMETERS_NONE();
+
+    if (multi_polygon_obj_to_geo_json(Z_OBJ_P(ZEND_THIS), return_value) != 0) {
+        H3_THROW("Failed to build GeoJSON MultiPolygon coordinates", 0);
+        RETURN_THROWS();
+    }
 }
 
 PHP_METHOD(H3_CoordIJ, __construct)
