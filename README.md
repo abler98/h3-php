@@ -150,3 +150,9 @@ sudo make install
 | pointDistKm()         | H3\point_dist()           |
 | pointDistM()          | H3\point_dist()           |
 | pointDistRads()       | H3\point_dist()           |
+
+# License
+
+All contents of this package are licensed under the [MIT license].
+
+[MIT license]: LICENSE
