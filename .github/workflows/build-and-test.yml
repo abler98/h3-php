@@ -1,0 +1,47 @@
+on: push
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: [ '8.1' ]
+        h3: [ '3.7.2' ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout H3 lib
+        uses: actions/checkout@v3
+        with:
+          repository: uber/h3
+          ref: v${{ matrix.h3 }}
+          path: h3-lib
+
+      - name: Build H3 lib
+        working-directory: h3-lib
+        run: |
+          cmake -DBUILD_SHARED_LIBS=ON .
+          make
+          sudo make install
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Build extension
+        run: |
+          phpize
+          ./configure --with-h3
+          make
+          sudo make install
+
+      - name: Run tests
+        run: |
+          export NO_INTERACTION=1
+          export REPORT_EXIT_STATUS=1
+          export TEST_PHP_EXECUTABLE=$(which php)
+          php run-tests.php --show-diff -d extension=h3.so ./tests/*.phpt
