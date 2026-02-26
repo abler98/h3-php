@@ -34,7 +34,7 @@ function get_res0_indexes(): array {}
  */
 function get_pentagon_indexes(int $res): array {}
 
-function point_dist(GeoCoord $a, GeoCoord $b, int $unit): float {}
+function point_dist(LatLng $a, LatLng $b, int $unit): float {}
 
 /**
  * @param H3Index[] $indexes
@@ -91,7 +91,7 @@ final class H3Index {
     /**
      * @throws H3Exception
      */
-    public static function fromGeo(GeoCoord $geo, int $res): H3Index {}
+    public static function fromGeo(LatLng $geo, int $res): H3Index {}
 
     public function isValid(): bool {}
 
@@ -118,13 +118,13 @@ final class H3Index {
      */
     public function kRingDistances(int $k): array {}
 
-    /** 
+    /**
      * @return H3Index[]
      * @throws H3Exception if pentagonal distortion is encountered
      */
     public function hexRange(int $k): array {}
 
-    /** 
+    /**
      * @return H3Index[]
      * @throws H3Exception if pentagonal distortion is encountered
      */
@@ -148,11 +148,11 @@ final class H3Index {
     public function getDistanceTo(H3Index $destination): int {}
 
     /**
-     * @return H3UniEdge[]
+     * @return H3DirectedEdge[]
      */
-    public function getUnidirectionalEdges(): array {}
+    public function getDirectedEdges(): array {}
 
-    public function getUnidirectionalEdge(H3Index $destination): H3UniEdge {}
+    public function getDirectedEdge(H3Index $destination): H3DirectedEdge {}
 
     /**
      * @throws H3Exception if invalid resolution given
@@ -174,22 +174,22 @@ final class H3Index {
 
     public function toString(): string {}
 
-    public function toGeo(): GeoCoord {}
+    public function toGeo(): LatLng {}
 
-    public function toGeoBoundary(): GeoBoundary {}
+    public function toGeoBoundary(): CellBoundary {}
 
     public function __toString(): string {}
 }
 
-final class H3UniEdge {
+final class H3DirectedEdge {
 
     private int $index;
 
     public function __construct(int $index) {}
 
-    public static function fromLong(int $index): H3UniEdge {}
+    public static function fromLong(int $index): H3DirectedEdge {}
 
-    public static function fromString(string $value): H3UniEdge {}
+    public static function fromString(string $value): H3DirectedEdge {}
 
     public function isValid(): bool {}
 
@@ -202,7 +202,7 @@ final class H3UniEdge {
      */
     public function getIndexes(): array {}
 
-    public function getBoundary(): GeoBoundary {}
+    public function getBoundary(): CellBoundary {}
 
     public function getLength(int $unit): float {}
 
@@ -213,7 +213,7 @@ final class H3UniEdge {
     public function __toString(): string {}
 }
 
-final class GeoCoord {
+final class LatLng {
 
     private float $lat;
 
@@ -226,42 +226,42 @@ final class GeoCoord {
     public function getLon(): float {}
 }
 
-final class GeoBoundary {
+final class CellBoundary {
 
     /**
-     * @var GeoCoord[]
+     * @var LatLng[]
      */
     private array $vertices;
 
     /**
-     * @param GeoCoord[] $vertices
+     * @param LatLng[] $vertices
      */
     public function __construct(array $vertices) {}
 
     /**
-     * @return GeoCoord[]
+     * @return LatLng[]
      */
     public function getVertices(): array {}
 }
 
 final class GeoPolygon {
 
-    private GeoBoundary $geofence;
+    private CellBoundary $geofence;
 
     /**
-     * @var GeoBoundary[]
+     * @var CellBoundary[]
      */
     private array $holes;
 
     /**
-     * @param GeoBoundary[] $holes
+     * @param CellBoundary[] $holes
      */
-    public function __construct(GeoBoundary $geofence, array $holes = []) {}
+    public function __construct(CellBoundary $geofence, array $holes = []) {}
 
-    public function getGeofence(): GeoBoundary {}
+    public function getGeofence(): CellBoundary {}
 
     /**
-     * @return GeoBoundary[]
+     * @return CellBoundary[]
      */
     public function getHoles(): array {}
 }

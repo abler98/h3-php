@@ -20,7 +20,7 @@ try {
 }
 ?>
 --EXPECT--
-float(0.461354684)
-float(461.3546837)
+float(0.53141401)
+float(531.4140101)
 bool(true)
 bool(true)

@@ -46,26 +46,26 @@ ZEND_DECLARE_MODULE_GLOBALS(h3)
     }
 
 #define VALIDATE_H3_INDEX(index)                                 \
-    if (H3_G(validate_index) && !h3IsValid(index)) {             \
+    if (H3_G(validate_index) && !isValidCell(index)) {           \
         H3_THROW("Invalid H3 index", H3_ERR_CODE_INVALID_INDEX); \
         RETURN_THROWS();                                         \
     }
 
 #define VALIDATE_H3_UNI_EDGE(index)                                            \
-    if (H3_G(validate_index) && !h3UnidirectionalEdgeIsValid(index)) {         \
+    if (H3_G(validate_index) && !isValidDirectedEdge(index)) {                 \
         H3_THROW("Invalid H3 unidirectional edge", H3_ERR_CODE_INVALID_INDEX); \
         RETURN_THROWS();                                                       \
     }
 
 #define OBJ_IS_A(val, ce) (Z_TYPE_P(val) == IS_OBJECT && instanceof_function(Z_OBJCE_P(val), ce))
 
-typedef H3Index H3UniEdge;
+typedef H3Index H3DirectedEdge;
 
 zend_class_entry *H3_H3Exception_ce;
 zend_class_entry *H3_H3Index_ce;
-zend_class_entry *H3_H3UniEdge_ce;
-zend_class_entry *H3_GeoCoord_ce;
-zend_class_entry *H3_GeoBoundary_ce;
+zend_class_entry *H3_H3DirectedEdge_ce;
+zend_class_entry *H3_LatLng_ce;
+zend_class_entry *H3_CellBoundary_ce;
 zend_class_entry *H3_GeoPolygon_ce;
 zend_class_entry *H3_GeoMultiPolygon_ce;
 zend_class_entry *H3_CoordIJ_ce;
@@ -94,9 +94,9 @@ zend_object *h3_to_obj(H3Index index)
     return obj;
 }
 
-void h3_array_to_zend_array(H3Index *in, int size, zval *out)
+void h3_array_to_zend_array(H3Index *in, int64_t size, zval *out)
 {
-    for (int i = 0; i < size; i++) {
+    for (int64_t i = 0; i < size; i++) {
         if (in[i] != H3_INVALID_INDEX) {
             add_next_index_object(out, h3_to_obj(in[i]));
         }
@@ -121,57 +121,57 @@ int zend_array_to_h3_array(zend_array *arr, H3Index *out)
     return 0;
 }
 
-H3UniEdge obj_to_h3ue(zend_object *obj)
+H3DirectedEdge obj_to_h3de(zend_object *obj)
 {
     zval *prop;
     zval rv;
 
-    prop = zend_read_property(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, 1, &rv);
+    prop = zend_read_property(H3_H3DirectedEdge_ce, obj, "index", sizeof("index") - 1, 1, &rv);
 
     return zval_get_long(prop);
 }
 
-zend_object *h3ue_to_obj(H3UniEdge index)
+zend_object *h3de_to_obj(H3DirectedEdge index)
 {
-    zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
-    object_properties_init(obj, H3_H3UniEdge_ce);
-    zend_update_property_long(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, index);
+    zend_object *obj = zend_objects_new(H3_H3DirectedEdge_ce);
+    object_properties_init(obj, H3_H3DirectedEdge_ce);
+    zend_update_property_long(H3_H3DirectedEdge_ce, obj, "index", sizeof("index") - 1, index);
 
     return obj;
 }
 
-void h3ue_array_to_zend_array(H3UniEdge *in, int size, zval *out)
+void h3de_array_to_zend_array(H3DirectedEdge *in, int size, zval *out)
 {
     for (int i = 0; i < size; i++) {
         if (in[i] != H3_INVALID_INDEX) {
-            add_next_index_object(out, h3ue_to_obj(in[i]));
+            add_next_index_object(out, h3de_to_obj(in[i]));
         }
     }
 }
 
-void obj_to_geo(zend_object *obj, GeoCoord *geo)
+void obj_to_geo(zend_object *obj, LatLng *geo)
 {
     zval *prop;
     zval rv;
 
-    prop = zend_read_property(H3_GeoCoord_ce, obj, "lat", sizeof("lat") - 1, 1, &rv);
+    prop = zend_read_property(H3_LatLng_ce, obj, "lat", sizeof("lat") - 1, 1, &rv);
     geo->lat = degsToRads(zval_get_double(prop));
-    prop = zend_read_property(H3_GeoCoord_ce, obj, "lon", sizeof("lon") - 1, 1, &rv);
-    geo->lon = degsToRads(zval_get_double(prop));
+    prop = zend_read_property(H3_LatLng_ce, obj, "lon", sizeof("lon") - 1, 1, &rv);
+    geo->lng = degsToRads(zval_get_double(prop));
 }
 
-zend_object *geo_to_obj(GeoCoord *geo)
+zend_object *geo_to_obj(LatLng *geo)
 {
-    zend_object *obj = zend_objects_new(H3_GeoCoord_ce);
-    object_properties_init(obj, H3_GeoCoord_ce);
+    zend_object *obj = zend_objects_new(H3_LatLng_ce);
+    object_properties_init(obj, H3_LatLng_ce);
 
-    zend_update_property_double(H3_GeoCoord_ce, obj, "lat", sizeof("lat") - 1, radsToDegs(geo->lat));
-    zend_update_property_double(H3_GeoCoord_ce, obj, "lon", sizeof("lon") - 1, radsToDegs(geo->lon));
+    zend_update_property_double(H3_LatLng_ce, obj, "lat", sizeof("lat") - 1, radsToDegs(geo->lat));
+    zend_update_property_double(H3_LatLng_ce, obj, "lon", sizeof("lon") - 1, radsToDegs(geo->lng));
 
     return obj;
 }
 
-zend_object *geo_boundary_to_obj(GeoBoundary *boundary)
+zend_object *geo_boundary_to_obj(CellBoundary *boundary)
 {
     zval val;
     array_init_size(&val, boundary->numVerts);
@@ -180,24 +180,24 @@ zend_object *geo_boundary_to_obj(GeoBoundary *boundary)
         add_next_index_object(&val, geo_to_obj(&boundary->verts[i]));
     }
 
-    zend_object *obj = zend_objects_new(H3_GeoBoundary_ce);
-    object_properties_init(obj, H3_GeoBoundary_ce);
+    zend_object *obj = zend_objects_new(H3_CellBoundary_ce);
+    object_properties_init(obj, H3_CellBoundary_ce);
 
-    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &val);
+    zend_update_property(H3_CellBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &val);
 
     zval_ptr_dtor(&val);
 
     return obj;
 }
 
-int zend_array_to_geocoord_array(zend_array *arr, GeoCoord *out)
+int zend_array_to_geocoord_array(zend_array *arr, LatLng *out)
 {
     int idx = 0;
     zval *val;
 
     ZEND_HASH_FOREACH_VAL(arr, val)
     {
-        if (OBJ_IS_A(val, H3_GeoCoord_ce)) {
+        if (OBJ_IS_A(val, H3_LatLng_ce)) {
             obj_to_geo(Z_OBJ_P(val), &out[idx++]);
         } else {
             return -1;
@@ -208,7 +208,7 @@ int zend_array_to_geocoord_array(zend_array *arr, GeoCoord *out)
     return 0;
 }
 
-int obj_to_geofence(zend_object *obj, Geofence *out)
+int obj_to_geoloop(zend_object *obj, GeoLoop *out)
 {
     zval *prop;
     zval rv;
@@ -216,15 +216,15 @@ int obj_to_geofence(zend_object *obj, Geofence *out)
     int idx = 0;
     zval *val;
 
-    prop = zend_read_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, 1, &rv);
+    prop = zend_read_property(H3_CellBoundary_ce, obj, "vertices", sizeof("vertices") - 1, 1, &rv);
     arr = Z_ARR_P(prop);
 
     uint32_t num_verts = zend_array_count(arr);
-    GeoCoord *verts = ecalloc(num_verts, sizeof(GeoCoord));
+    LatLng *verts = ecalloc(num_verts, sizeof(LatLng));
 
     ZEND_HASH_FOREACH_VAL(arr, val)
     {
-        if (OBJ_IS_A(val, H3_GeoCoord_ce)) {
+        if (OBJ_IS_A(val, H3_LatLng_ce)) {
             obj_to_geo(Z_OBJ_P(val), &verts[idx++]);
         } else {
             efree(verts);
@@ -241,15 +241,15 @@ int obj_to_geofence(zend_object *obj, Geofence *out)
     return 0;
 }
 
-int zend_array_to_geofence_array(zend_array *arr, Geofence *out)
+int zend_array_to_geoloop_array(zend_array *arr, GeoLoop *out)
 {
     int idx = 0;
     zval *val;
-    Geofence tmp;
+    GeoLoop tmp;
 
     ZEND_HASH_FOREACH_VAL(arr, val)
     {
-        if (OBJ_IS_A(val, H3_GeoBoundary_ce) && obj_to_geofence(Z_OBJ_P(val), &tmp) == 0) {
+        if (OBJ_IS_A(val, H3_CellBoundary_ce) && obj_to_geoloop(Z_OBJ_P(val), &tmp) == 0) {
             out[idx++] = tmp;
         } else {
             return -1;
@@ -265,15 +265,22 @@ void h3_line(zend_object *start, zend_object *end, INTERNAL_FUNCTION_PARAMETERS)
     H3Index startIndex = obj_to_h3(start);
     H3Index endIndex = obj_to_h3(end);
 
-    int size = h3LineSize(startIndex, endIndex);
+    int64_t size;
+    H3Error err = gridPathCellsSize(startIndex, endIndex, &size);
 
-    if (size < 0) {
-        H3_THROW("Failed to caluclate line size", H3_ERR_CODE_LINE_SIZE_ERROR);
+    if (err) {
+        H3_THROW("Failed to calculate line size", H3_ERR_CODE_LINE_SIZE_ERROR);
         RETURN_THROWS();
     }
 
     H3Index *out = ecalloc(size, sizeof(H3Index));
-    h3Line(startIndex, endIndex, out);
+    err = gridPathCells(startIndex, endIndex, out);
+
+    if (err) {
+        H3_THROW("Failed to calculate line", H3_ERR_CODE_LINE_SIZE_ERROR);
+        efree(out);
+        RETURN_THROWS();
+    }
 
     array_init(return_value);
     h3_array_to_zend_array(out, size, return_value);
@@ -293,7 +300,7 @@ int geofence_obj_to_geojson_arr(zend_object *geofence_obj, zval *geojson_geofenc
     int idx = 0;
     uint32_t verts_count;
 
-    prop = zend_read_property(H3_GeoBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, 1, &rv);
+    prop = zend_read_property(H3_CellBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, 1, &rv);
     geofence_verts_arr = Z_ARRVAL_P(prop);
     verts_count = zend_array_count(geofence_verts_arr);
 
@@ -305,12 +312,12 @@ int geofence_obj_to_geojson_arr(zend_object *geofence_obj, zval *geojson_geofenc
 
     ZEND_HASH_FOREACH_VAL(geofence_verts_arr, geofence_vert_val)
     {
-        if (Z_TYPE_P(geofence_vert_val) == IS_OBJECT && OBJ_IS_A(geofence_vert_val, H3_GeoCoord_ce)) {
+        if (Z_TYPE_P(geofence_vert_val) == IS_OBJECT && OBJ_IS_A(geofence_vert_val, H3_LatLng_ce)) {
             coord_obj = Z_OBJ_P(geofence_vert_val);
             array_init_size(&coords_val, 2);
-            prop = zend_read_property(H3_GeoCoord_ce, coord_obj, "lon", sizeof("lon") - 1, 1, &rv);
+            prop = zend_read_property(H3_LatLng_ce, coord_obj, "lon", sizeof("lon") - 1, 1, &rv);
             add_next_index_double(&coords_val, Z_DVAL_P(prop));
-            prop = zend_read_property(H3_GeoCoord_ce, coord_obj, "lat", sizeof("lat") - 1, 1, &rv);
+            prop = zend_read_property(H3_LatLng_ce, coord_obj, "lat", sizeof("lat") - 1, 1, &rv);
             add_next_index_double(&coords_val, Z_DVAL_P(prop));
             add_next_index_zval(geojson_geofence_val, &coords_val);
             if (idx++ == 0) {
@@ -368,7 +375,7 @@ int multi_polygon_obj_to_geo_json(zend_object *obj, zval *return_value)
 
             ZEND_HASH_FOREACH_VAL(holes_arr, hole_val)
             {
-                if (Z_TYPE_P(hole_val) == IS_OBJECT && OBJ_IS_A(hole_val, H3_GeoBoundary_ce)) {
+                if (Z_TYPE_P(hole_val) == IS_OBJECT && OBJ_IS_A(hole_val, H3_CellBoundary_ce)) {
                     if (geofence_obj_to_geojson_arr(Z_OBJ_P(hole_val), &coords_val) == 0) {
                         add_next_index_zval(&geojson_polygon_val, &coords_val);
                     } else {
@@ -394,7 +401,7 @@ int multi_polygon_obj_to_geo_json(zend_object *obj, zval *return_value)
 
 zend_object *geo_loop_to_geo_boundary_obj(LinkedGeoLoop *geo_loop)
 {
-    LinkedGeoCoord *geo_coord;
+    LinkedLatLng *geo_coord;
     zval coords_val;
     zend_object *obj;
 
@@ -406,9 +413,9 @@ zend_object *geo_loop_to_geo_boundary_obj(LinkedGeoLoop *geo_loop)
         geo_coord = geo_coord->next;
     }
 
-    obj = zend_objects_new(H3_GeoBoundary_ce);
-    object_properties_init(obj, H3_GeoBoundary_ce);
-    zend_update_property(H3_GeoBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &coords_val);
+    obj = zend_objects_new(H3_CellBoundary_ce);
+    object_properties_init(obj, H3_CellBoundary_ce);
+    zend_update_property(H3_CellBoundary_ce, obj, "vertices", sizeof("vertices") - 1, &coords_val);
 
     Z_TRY_DELREF(coords_val);
 
@@ -455,11 +462,24 @@ PHP_FUNCTION(hex_area)
 
     VALIDATE_H3_RES(res);
 
+    double out;
+    H3Error err;
+
     switch (unit) {
         case H3_AREA_UNIT_KM2:
-            RETURN_DOUBLE(hexAreaKm2(res));
+            err = getHexagonAreaAvgKm2(res, &out);
+            if (err) {
+                H3_THROW("Failed to get hex area", H3_ERR_CODE_INVALID_RES);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         case H3_AREA_UNIT_M2:
-            RETURN_DOUBLE(hexAreaM2(res));
+            err = getHexagonAreaAvgM2(res, &out);
+            if (err) {
+                H3_THROW("Failed to get hex area", H3_ERR_CODE_INVALID_RES);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         default:
             H3_THROW("Unsupported unit (must be one of H3_AREA_UNIT_KM2, or H3_AREA_UNIT_M2)",
                      H3_ERR_CODE_UNSUPPORTED_UNIT);
@@ -481,11 +501,24 @@ PHP_FUNCTION(edge_length)
 
     VALIDATE_H3_RES(res);
 
+    double out;
+    H3Error err;
+
     switch (unit) {
         case H3_LENGTH_UNIT_KM:
-            RETURN_DOUBLE(edgeLengthKm(res));
+            err = getHexagonEdgeLengthAvgKm(res, &out);
+            if (err) {
+                H3_THROW("Failed to get edge length", H3_ERR_CODE_INVALID_RES);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         case H3_LENGTH_UNIT_M:
-            RETURN_DOUBLE(edgeLengthM(res));
+            err = getHexagonEdgeLengthAvgM(res, &out);
+            if (err) {
+                H3_THROW("Failed to get edge length", H3_ERR_CODE_INVALID_RES);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         default:
             H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, or H3_LENGTH_UNIT_RADS)",
                      H3_ERR_CODE_UNSUPPORTED_UNIT);
@@ -505,17 +538,29 @@ PHP_FUNCTION(num_hexagons)
 
     VALIDATE_H3_RES(res);
 
-    RETURN_LONG(numHexagons(res));
+    int64_t out;
+    H3Error err = getNumCells(res, &out);
+    if (err) {
+        H3_THROW("Failed to get number of hexagons", H3_ERR_CODE_INVALID_RES);
+        RETURN_THROWS();
+    }
+
+    RETURN_LONG(out);
 }
 
 PHP_FUNCTION(get_res0_indexes)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    int max = res0IndexCount();
+    int max = res0CellCount();
 
     H3Index *indexes = ecalloc(max, sizeof(H3Index));
-    getRes0Indexes(indexes);
+    H3Error err = getRes0Cells(indexes);
+    if (err) {
+        efree(indexes);
+        H3_THROW("Failed to get res0 indexes", 0);
+        RETURN_THROWS();
+    }
 
     array_init_size(return_value, max);
     h3_array_to_zend_array(indexes, max, return_value);
@@ -535,10 +580,15 @@ PHP_FUNCTION(get_pentagon_indexes)
 
     VALIDATE_H3_RES(res);
 
-    int max = pentagonIndexCount();
+    int max = pentagonCount();
 
     H3Index *indexes = ecalloc(max, sizeof(H3Index));
-    getPentagonIndexes(res, indexes);
+    H3Error err = getPentagons(res, indexes);
+    if (err) {
+        efree(indexes);
+        H3_THROW("Failed to get pentagon indexes", H3_ERR_CODE_INVALID_RES);
+        RETURN_THROWS();
+    }
 
     array_init_size(return_value, max);
     h3_array_to_zend_array(indexes, max, return_value);
@@ -554,27 +604,27 @@ PHP_FUNCTION(point_dist)
 
     // clang-format off
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJ_OF_CLASS(a, H3_GeoCoord_ce)
-        Z_PARAM_OBJ_OF_CLASS(b, H3_GeoCoord_ce)
+        Z_PARAM_OBJ_OF_CLASS(a, H3_LatLng_ce)
+        Z_PARAM_OBJ_OF_CLASS(b, H3_LatLng_ce)
         Z_PARAM_LONG(unit)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    GeoCoord *geoA = emalloc(sizeof(GeoCoord));
-    GeoCoord *geoB = emalloc(sizeof(GeoCoord));
+    LatLng *geoA = emalloc(sizeof(LatLng));
+    LatLng *geoB = emalloc(sizeof(LatLng));
 
     obj_to_geo(a, geoA);
     obj_to_geo(b, geoB);
 
     switch (unit) {
         case H3_LENGTH_UNIT_KM:
-            RETVAL_DOUBLE(pointDistKm(geoA, geoB));
+            RETVAL_DOUBLE(greatCircleDistanceKm(geoA, geoB));
             break;
         case H3_LENGTH_UNIT_M:
-            RETVAL_DOUBLE(pointDistM(geoA, geoB));
+            RETVAL_DOUBLE(greatCircleDistanceM(geoA, geoB));
             break;
         case H3_LENGTH_UNIT_RADS:
-            RETVAL_DOUBLE(pointDistRads(geoA, geoB));
+            RETVAL_DOUBLE(greatCircleDistanceRads(geoA, geoB));
             break;
         default:
             H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS)",
@@ -613,7 +663,8 @@ PHP_FUNCTION(compact)
         RETURN_THROWS();
     }
 
-    if (compact(set, compactedSet, count) != 0) {
+    H3Error err = compactCells(set, compactedSet, count);
+    if (err) {
         H3_THROW("Failed to compact", H3_ERR_CODE_COMPACT_ERROR);
         efree(set);
         efree(compactedSet);
@@ -651,9 +702,10 @@ PHP_FUNCTION(uncompact)
         RETURN_THROWS();
     }
 
-    int max = maxUncompactSize(compactedSet, count, res);
+    int64_t max;
+    H3Error err = uncompactCellsSize(compactedSet, count, res, &max);
 
-    if (max < 0) {
+    if (err) {
         H3_THROW("Unknown uncompact error", H3_ERR_CODE_UNCOMPACT_ERROR);
         efree(compactedSet);
         RETURN_THROWS();
@@ -661,7 +713,8 @@ PHP_FUNCTION(uncompact)
 
     H3Index *set = ecalloc(max, sizeof(H3Index));
 
-    if (uncompact(compactedSet, count, set, max, res) != 0) {
+    err = uncompactCells(compactedSet, count, set, max, res);
+    if (err) {
         H3_THROW("Failed to uncompact", H3_ERR_CODE_UNCOMPACT_ERROR);
         efree(compactedSet);
         efree(set);
@@ -702,7 +755,14 @@ PHP_FUNCTION(distance)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    RETURN_LONG(h3Distance(obj_to_h3(a), obj_to_h3(b)));
+    int64_t dist;
+    H3Error err = gridDistance(obj_to_h3(a), obj_to_h3(b), &dist);
+    if (err) {
+        H3_THROW("Failed to calculate distance", 0);
+        RETURN_THROWS();
+    }
+
+    RETURN_LONG(dist);
 }
 
 PHP_FUNCTION(indexes_are_neighbors)
@@ -720,7 +780,14 @@ PHP_FUNCTION(indexes_are_neighbors)
     H3Index origin = obj_to_h3(org);
     H3Index destination = obj_to_h3(dest);
 
-    RETURN_BOOL(h3IndexesAreNeighbors(origin, destination));
+    int out;
+    H3Error err = areNeighborCells(origin, destination, &out);
+    if (err) {
+        H3_THROW("Failed to check neighbors", 0);
+        RETURN_THROWS();
+    }
+
+    RETURN_BOOL(out);
 }
 
 PHP_FUNCTION(polyfill)
@@ -748,11 +815,11 @@ PHP_FUNCTION(polyfill)
     geofence_val = zend_read_property(H3_GeoPolygon_ce, polygon, "geofence", sizeof("geofence") - 1, 1, &rv);
     geofence_obj = Z_OBJ_P(geofence_val);
 
-    geofence_verts_val = zend_read_property(H3_GeoBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, 1, &rv);
+    geofence_verts_val = zend_read_property(H3_CellBoundary_ce, geofence_obj, "vertices", sizeof("vertices") - 1, 1, &rv);
     geofence_verts_arr = Z_ARR_P(geofence_verts_val);
 
     uint32_t geofence_num_verts = zend_array_count(geofence_verts_arr);
-    GeoCoord *geofence_verts = ecalloc(geofence_num_verts, sizeof(GeoCoord));
+    LatLng *geofence_verts = ecalloc(geofence_num_verts, sizeof(LatLng));
 
     if (zend_array_to_geocoord_array(geofence_verts_arr, geofence_verts) != 0) {
         zend_argument_error(H3_H3Exception_ce, 1, "must be valid GeoPolygon object");
@@ -764,9 +831,9 @@ PHP_FUNCTION(polyfill)
     holes_arr = Z_ARR_P(holes_val);
 
     uint32_t num_holes = zend_array_count(holes_arr);
-    Geofence *holes = ecalloc(num_holes, sizeof(Geofence));
+    GeoLoop *holes = ecalloc(num_holes, sizeof(GeoLoop));
 
-    if (zend_array_to_geofence_array(holes_arr, holes) != 0) {
+    if (zend_array_to_geoloop_array(holes_arr, holes) != 0) {
         zend_argument_error(H3_H3Exception_ce, 1, "must be valid GeoPolygon object");
         efree(geofence_verts);
         efree(holes);
@@ -774,7 +841,7 @@ PHP_FUNCTION(polyfill)
     }
 
     GeoPolygon geo_polygon = {
-        .geofence = {
+        .geoloop = {
             .numVerts = geofence_num_verts,
             .verts = geofence_verts,
         },
@@ -782,9 +849,24 @@ PHP_FUNCTION(polyfill)
         .holes = holes,
     };
 
-    int max = maxPolyfillSize(&geo_polygon, res);
+    int64_t max;
+    H3Error err = maxPolygonToCellsSize(&geo_polygon, res, 0, &max);
+    if (err) {
+        efree(geofence_verts);
+        efree(holes);
+        H3_THROW("Failed to calculate polyfill size", 0);
+        RETURN_THROWS();
+    }
+
     H3Index *out = ecalloc(max, sizeof(H3Index));
-    polyfill(&geo_polygon, res, out);
+    err = polygonToCells(&geo_polygon, res, 0, out);
+    if (err) {
+        efree(geofence_verts);
+        efree(holes);
+        efree(out);
+        H3_THROW("Failed to polyfill", 0);
+        RETURN_THROWS();
+    }
 
     array_init(return_value);
     h3_array_to_zend_array(out, max, return_value);
@@ -815,11 +897,17 @@ PHP_FUNCTION(h3_set_to_multi_polygon)
     }
 
     LinkedGeoPolygon *out = emalloc(sizeof(LinkedGeoPolygon));
-    h3SetToLinkedGeo(set, num_indexes, out);
+    H3Error err = cellsToLinkedMultiPolygon(set, num_indexes, out);
+    if (err) {
+        efree(set);
+        efree(out);
+        H3_THROW("Failed to convert to multi polygon", 0);
+        RETURN_THROWS();
+    }
 
     LinkedGeoPolygon *polygon = out;
     LinkedGeoLoop *geo_loop;
-    LinkedGeoCoord *geo_coord;
+    LinkedLatLng *geo_coord;
 
     zval polygons_val;
     zval holes_val;
@@ -863,7 +951,7 @@ PHP_FUNCTION(h3_set_to_multi_polygon)
     object_properties_init(result, H3_GeoMultiPolygon_ce);
     zend_update_property(H3_GeoMultiPolygon_ce, result, "polygons", sizeof("polygons") - 1, &polygons_val);
 
-    destroyLinkedPolygon(out);
+    destroyLinkedMultiPolygon(out);
 
     zval_ptr_dtor(&polygons_val);
 
@@ -886,7 +974,11 @@ PHP_FUNCTION(experimental_h3_to_local_ij)
     // clang-format on
 
     CoordIJ ij;
-    experimentalH3ToLocalIj(obj_to_h3(origin_obj), obj_to_h3(h_obj), &ij);
+    H3Error err = cellToLocalIj(obj_to_h3(origin_obj), obj_to_h3(h_obj), 0, &ij);
+    if (err) {
+        H3_THROW("Failed to convert to local IJ", 0);
+        RETURN_THROWS();
+    }
 
     zend_object *ij_obj = zend_objects_new(H3_CoordIJ_ce);
     object_properties_init(ij_obj, H3_CoordIJ_ce);
@@ -918,7 +1010,11 @@ PHP_FUNCTION(experimental_local_ij_to_h3)
     ij.j = Z_LVAL_P(prop);
 
     H3Index result;
-    experimentalLocalIjToH3(obj_to_h3(origin_obj), &ij, &result);
+    H3Error err = localIjToCell(obj_to_h3(origin_obj), &ij, 0, &result);
+    if (err) {
+        H3_THROW("Failed to convert from local IJ", 0);
+        RETURN_THROWS();
+    }
 
     RETURN_OBJ(h3_to_obj(result));
 }
@@ -967,7 +1063,12 @@ PHP_METHOD(H3_H3Index, fromString)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    H3Index index = stringToH3(ZSTR_VAL(value));
+    H3Index index;
+    H3Error err = stringToH3(ZSTR_VAL(value), &index);
+    if (err) {
+        H3_THROW("Failed to parse H3 index string", H3_ERR_CODE_INVALID_INDEX);
+        RETURN_THROWS();
+    }
 
     VALIDATE_H3_INDEX(index);
 
@@ -981,19 +1082,21 @@ PHP_METHOD(H3_H3Index, fromGeo)
 
     // clang-format off
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJ_OF_CLASS(geo_obj, H3_GeoCoord_ce)
+        Z_PARAM_OBJ_OF_CLASS(geo_obj, H3_LatLng_ce)
         Z_PARAM_LONG(res)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
     VALIDATE_H3_RES(res);
 
-    GeoCoord *geo = emalloc(sizeof(GeoCoord));
+    LatLng *geo = emalloc(sizeof(LatLng));
     obj_to_geo(geo_obj, geo);
-    H3Index index = geoToH3(geo, res);
+
+    H3Index index;
+    H3Error err = latLngToCell(geo, res, &index);
     efree(geo);
 
-    if (index == H3_INVALID_INDEX) {
+    if (err) {
         H3_THROW("Failed to create H3 index from geo coordinates", 0);
         RETURN_THROWS();
     }
@@ -1005,35 +1108,35 @@ PHP_METHOD(H3_H3Index, isValid)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    RETURN_BOOL(h3IsValid(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
+    RETURN_BOOL(isValidCell(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
 }
 
 PHP_METHOD(H3_H3Index, isResClassIII)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    RETURN_BOOL(h3IsResClassIII(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
+    RETURN_BOOL(isResClassIII(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
 }
 
 PHP_METHOD(H3_H3Index, isPentagon)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    RETURN_BOOL(h3IsPentagon(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
+    RETURN_BOOL(isPentagon(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
 }
 
 PHP_METHOD(H3_H3Index, getResolution)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    RETURN_LONG(h3GetResolution(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
+    RETURN_LONG(getResolution(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
 }
 
 PHP_METHOD(H3_H3Index, getBaseCell)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    RETURN_LONG(h3GetBaseCell(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
+    RETURN_LONG(getBaseCellNumber(obj_to_h3(Z_OBJ_P(ZEND_THIS))));
 }
 
 PHP_METHOD(H3_H3Index, getFaces)
@@ -1041,10 +1144,21 @@ PHP_METHOD(H3_H3Index, getFaces)
     ZEND_PARSE_PARAMETERS_NONE();
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-    int max = maxFaceCount(index);
+
+    int max;
+    H3Error err = maxFaceCount(index, &max);
+    if (err) {
+        H3_THROW("Failed to get max face count", 0);
+        RETURN_THROWS();
+    }
 
     int *out = ecalloc(max, sizeof(int));
-    h3GetFaces(index, out);
+    err = getIcosahedronFaces(index, out);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to get faces", 0);
+        RETURN_THROWS();
+    }
 
     array_init(return_value);
 
@@ -1067,11 +1181,21 @@ PHP_METHOD(H3_H3Index, kRing)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    int max = maxKringSize(k);
+    int64_t max;
+    H3Error err = maxGridDiskSize(k, &max);
+    if (err) {
+        H3_THROW("Failed to get max grid disk size", 0);
+        RETURN_THROWS();
+    }
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
-    kRing(index, k, out);
+    err = gridDisk(index, k, out);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to get grid disk", 0);
+        RETURN_THROWS();
+    }
 
     array_init(return_value);
     h3_array_to_zend_array(out, max, return_value);
@@ -1089,12 +1213,23 @@ PHP_METHOD(H3_H3Index, kRingDistances)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    int max = maxKringSize(k);
+    int64_t max;
+    H3Error err = maxGridDiskSize(k, &max);
+    if (err) {
+        H3_THROW("Failed to get max grid disk size", 0);
+        RETURN_THROWS();
+    }
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
     int *distances = ecalloc(max, sizeof(int));
-    kRingDistances(index, k, out, distances);
+    err = gridDiskDistances(index, k, out, distances);
+    if (err) {
+        efree(out);
+        efree(distances);
+        H3_THROW("Failed to get grid disk distances", 0);
+        RETURN_THROWS();
+    }
 
     array_init_size(return_value, k + 1);
 
@@ -1105,7 +1240,7 @@ PHP_METHOD(H3_H3Index, kRingDistances)
         add_next_index_zval(return_value, &values[i]);
     }
 
-    for (int i = 0; i < max; i++) {
+    for (int64_t i = 0; i < max; i++) {
         if (out[i] != H3_INVALID_INDEX) {
             add_next_index_object(&values[distances[i]], h3_to_obj(out[i]));
         }
@@ -1126,12 +1261,18 @@ PHP_METHOD(H3_H3Index, hexRange)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    int max = maxKringSize(k);
+    int64_t max;
+    H3Error err = maxGridDiskSize(k, &max);
+    if (err) {
+        H3_THROW("Failed to get max grid disk size", 0);
+        RETURN_THROWS();
+    }
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
 
-    if (hexRange(index, k, out) != 0) {
+    err = gridDiskUnsafe(index, k, out);
+    if (err) {
         H3_THROW("Pentagonal distortion is encountered", H3_ERR_CODE_PENTAGON_ENCOUNTERED);
         efree(out);
         RETURN_THROWS();
@@ -1158,7 +1299,8 @@ PHP_METHOD(H3_H3Index, hexRing)
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
 
-    if (hexRing(index, k, out) != 0) {
+    H3Error err = gridRingUnsafe(index, k, out);
+    if (err) {
         H3_THROW("Pentagonal distortion is encountered", H3_ERR_CODE_PENTAGON_ENCOUNTERED);
         efree(out);
         RETURN_THROWS();
@@ -1180,13 +1322,19 @@ PHP_METHOD(H3_H3Index, hexRangeDistances)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    int max = maxKringSize(k);
+    int64_t max;
+    H3Error err = maxGridDiskSize(k, &max);
+    if (err) {
+        H3_THROW("Failed to get max grid disk size", 0);
+        RETURN_THROWS();
+    }
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(max, sizeof(H3Index));
     int *distances = ecalloc(max, sizeof(int));
 
-    if (hexRangeDistances(index, k, out, distances) != 0) {
+    err = gridDiskDistancesUnsafe(index, k, out, distances);
+    if (err) {
         H3_THROW("Pentagonal distortion is encountered", H3_ERR_CODE_PENTAGON_ENCOUNTERED);
         efree(out);
         efree(distances);
@@ -1202,7 +1350,7 @@ PHP_METHOD(H3_H3Index, hexRangeDistances)
         add_next_index_zval(return_value, &values[i]);
     }
 
-    for (int i = 0; i < max; i++) {
+    for (int64_t i = 0; i < max; i++) {
         if (out[i] != H3_INVALID_INDEX) {
             add_next_index_object(&values[distances[i]], h3_to_obj(out[i]));
         }
@@ -1224,14 +1372,31 @@ PHP_METHOD(H3_H3Index, getCellArea)
     // clang-format on
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
+    double out;
+    H3Error err;
 
     switch (unit) {
         case H3_AREA_UNIT_KM2:
-            RETURN_DOUBLE(cellAreaKm2(index));
+            err = cellAreaKm2(index, &out);
+            if (err) {
+                H3_THROW("Failed to get cell area", 0);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         case H3_AREA_UNIT_M2:
-            RETURN_DOUBLE(cellAreaM2(index));
+            err = cellAreaM2(index, &out);
+            if (err) {
+                H3_THROW("Failed to get cell area", 0);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         case H3_AREA_UNIT_RADS2:
-            RETURN_DOUBLE(cellAreaRads2(index));
+            err = cellAreaRads2(index, &out);
+            if (err) {
+                H3_THROW("Failed to get cell area", 0);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         default:
             H3_THROW("Unsupported unit (must be one of H3_AREA_UNIT_KM2, H3_AREA_UNIT_M2, or H3_AREA_UNIT_RADS2)",
                      H3_ERR_CODE_UNSUPPORTED_UNIT);
@@ -1252,7 +1417,14 @@ PHP_METHOD(H3_H3Index, isNeighborTo)
     H3Index origin = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index destination = obj_to_h3(dest);
 
-    RETURN_BOOL(h3IndexesAreNeighbors(origin, destination));
+    int out;
+    H3Error err = areNeighborCells(origin, destination, &out);
+    if (err) {
+        H3_THROW("Failed to check neighbors", 0);
+        RETURN_THROWS();
+    }
+
+    RETURN_BOOL(out);
 }
 
 PHP_METHOD(H3_H3Index, getLineTo)
@@ -1278,24 +1450,36 @@ PHP_METHOD(H3_H3Index, getDistanceTo)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    RETURN_LONG(h3Distance(obj_to_h3(Z_OBJ_P(ZEND_THIS)), obj_to_h3(dest)));
+    int64_t dist;
+    H3Error err = gridDistance(obj_to_h3(Z_OBJ_P(ZEND_THIS)), obj_to_h3(dest), &dist);
+    if (err) {
+        H3_THROW("Failed to calculate distance", 0);
+        RETURN_THROWS();
+    }
+
+    RETURN_LONG(dist);
 }
 
-PHP_METHOD(H3_H3Index, getUnidirectionalEdges)
+PHP_METHOD(H3_H3Index, getDirectedEdges)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-    H3UniEdge *edges = ecalloc(H3_HEX_NUM_EDGES, sizeof(H3UniEdge));
-    getH3UnidirectionalEdgesFromHexagon(index, edges);
+    H3DirectedEdge *edges = ecalloc(H3_HEX_NUM_EDGES, sizeof(H3DirectedEdge));
+    H3Error err = originToDirectedEdges(index, edges);
+    if (err) {
+        efree(edges);
+        H3_THROW("Failed to get directed edges", 0);
+        RETURN_THROWS();
+    }
 
     array_init_size(return_value, H3_HEX_NUM_EDGES);
-    h3ue_array_to_zend_array(edges, H3_HEX_NUM_EDGES, return_value);
+    h3de_array_to_zend_array(edges, H3_HEX_NUM_EDGES, return_value);
 
     efree(edges);
 }
 
-PHP_METHOD(H3_H3Index, getUnidirectionalEdge)
+PHP_METHOD(H3_H3Index, getDirectedEdge)
 {
     zend_object *dest;
 
@@ -1307,14 +1491,16 @@ PHP_METHOD(H3_H3Index, getUnidirectionalEdge)
 
     H3Index origin = obj_to_h3(Z_OBJ_P(ZEND_THIS));
     H3Index destination = obj_to_h3(dest);
-    H3UniEdge edge = getH3UnidirectionalEdge(origin, destination);
 
-    if (edge == H3_INVALID_INDEX) {
-        H3_THROW("Failed to get unidirectional edge", 0);
+    H3DirectedEdge edge;
+    H3Error err = cellsToDirectedEdge(origin, destination, &edge);
+
+    if (err) {
+        H3_THROW("Failed to get directed edge", 0);
         RETURN_THROWS();
     }
 
-    RETURN_OBJ(h3ue_to_obj(edge));
+    RETURN_OBJ(h3de_to_obj(edge));
 }
 
 PHP_METHOD(H3_H3Index, toParent)
@@ -1330,7 +1516,12 @@ PHP_METHOD(H3_H3Index, toParent)
     VALIDATE_H3_RES(res);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-    H3Index parent = h3ToParent(index, res);
+    H3Index parent;
+    H3Error err = cellToParent(index, res, &parent);
+    if (err) {
+        H3_THROW("Failed to get parent", H3_ERR_CODE_INVALID_RES);
+        RETURN_THROWS();
+    }
 
     RETURN_OBJ(h3_to_obj(parent));
 }
@@ -1348,10 +1539,21 @@ PHP_METHOD(H3_H3Index, toChildren)
     VALIDATE_H3_RES(res);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-    int max = maxH3ToChildrenSize(index, res);
+
+    int64_t max;
+    H3Error err = cellToChildrenSize(index, res, &max);
+    if (err) {
+        H3_THROW("Failed to get children size", H3_ERR_CODE_INVALID_RES);
+        RETURN_THROWS();
+    }
 
     H3Index *children = ecalloc(max, sizeof(H3Index));
-    h3ToChildren(index, res, children);
+    err = cellToChildren(index, res, children);
+    if (err) {
+        efree(children);
+        H3_THROW("Failed to get children", H3_ERR_CODE_INVALID_RES);
+        RETURN_THROWS();
+    }
 
     array_init(return_value);
     h3_array_to_zend_array(children, max, return_value);
@@ -1372,7 +1574,12 @@ PHP_METHOD(H3_H3Index, toCenterChild)
     VALIDATE_H3_RES(res);
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
-    H3Index child = h3ToCenterChild(index, res);
+    H3Index child;
+    H3Error err = cellToCenterChild(index, res, &child);
+    if (err) {
+        H3_THROW("Failed to get center child", H3_ERR_CODE_INVALID_RES);
+        RETURN_THROWS();
+    }
 
     RETURN_OBJ(h3_to_obj(child));
 }
@@ -1391,7 +1598,12 @@ PHP_METHOD(H3_H3Index, toString)
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
     char *out = emalloc(H3_STRVAL_LEN);
-    h3ToString(index, out, H3_STRVAL_LEN);
+    H3Error err = h3ToString(index, out, H3_STRVAL_LEN);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to convert H3 index to string", 0);
+        RETURN_THROWS();
+    }
     RETVAL_STRINGL(out, strlen(out));
     efree(out);
 }
@@ -1402,8 +1614,13 @@ PHP_METHOD(H3_H3Index, toGeo)
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
-    GeoCoord *geo = emalloc(sizeof(GeoCoord));
-    h3ToGeo(index, geo);
+    LatLng *geo = emalloc(sizeof(LatLng));
+    H3Error err = cellToLatLng(index, geo);
+    if (err) {
+        efree(geo);
+        H3_THROW("Failed to convert to geo", 0);
+        RETURN_THROWS();
+    }
     RETVAL_OBJ(geo_to_obj(geo));
     efree(geo);
 }
@@ -1414,8 +1631,13 @@ PHP_METHOD(H3_H3Index, toGeoBoundary)
 
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
-    GeoBoundary *boundary = emalloc(sizeof(GeoBoundary));
-    h3ToGeoBoundary(index, boundary);
+    CellBoundary *boundary = emalloc(sizeof(CellBoundary));
+    H3Error err = cellToBoundary(index, boundary);
+    if (err) {
+        efree(boundary);
+        H3_THROW("Failed to convert to boundary", 0);
+        RETURN_THROWS();
+    }
     RETVAL_OBJ(geo_boundary_to_obj(boundary));
     efree(boundary);
 }
@@ -1427,12 +1649,17 @@ PHP_METHOD(H3_H3Index, __toString)
     H3Index index = obj_to_h3(Z_OBJ_P(ZEND_THIS));
 
     char *out = emalloc(H3_STRVAL_LEN);
-    h3ToString(index, out, H3_STRVAL_LEN);
+    H3Error err = h3ToString(index, out, H3_STRVAL_LEN);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to convert H3 index to string", 0);
+        RETURN_THROWS();
+    }
     RETVAL_STRINGL(out, strlen(out));
     efree(out);
 }
 
-PHP_METHOD(H3_H3UniEdge, __construct)
+PHP_METHOD(H3_H3DirectedEdge, __construct)
 {
     zend_ulong index;
 
@@ -1444,10 +1671,10 @@ PHP_METHOD(H3_H3UniEdge, __construct)
 
     VALIDATE_H3_UNI_EDGE(index);
 
-    zend_update_property_long(H3_H3UniEdge_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
+    zend_update_property_long(H3_H3DirectedEdge_ce, Z_OBJ_P(ZEND_THIS), "index", sizeof("index") - 1, index);
 }
 
-PHP_METHOD(H3_H3UniEdge, fromLong)
+PHP_METHOD(H3_H3DirectedEdge, fromLong)
 {
     zend_ulong index;
 
@@ -1459,14 +1686,14 @@ PHP_METHOD(H3_H3UniEdge, fromLong)
 
     VALIDATE_H3_UNI_EDGE(index);
 
-    zend_object *obj = zend_objects_new(H3_H3UniEdge_ce);
-    object_properties_init(obj, H3_H3UniEdge_ce);
-    zend_update_property_long(H3_H3UniEdge_ce, obj, "index", sizeof("index") - 1, index);
+    zend_object *obj = zend_objects_new(H3_H3DirectedEdge_ce);
+    object_properties_init(obj, H3_H3DirectedEdge_ce);
+    zend_update_property_long(H3_H3DirectedEdge_ce, obj, "index", sizeof("index") - 1, index);
 
     RETURN_OBJ(obj);
 }
 
-PHP_METHOD(H3_H3UniEdge, fromString)
+PHP_METHOD(H3_H3DirectedEdge, fromString)
 {
     zend_string *value;
 
@@ -1476,49 +1703,69 @@ PHP_METHOD(H3_H3UniEdge, fromString)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    H3UniEdge edge = stringToH3(ZSTR_VAL(value));
+    H3DirectedEdge edge;
+    H3Error err = stringToH3(ZSTR_VAL(value), &edge);
+    if (err) {
+        H3_THROW("Failed to parse H3 edge string", H3_ERR_CODE_INVALID_INDEX);
+        RETURN_THROWS();
+    }
 
     VALIDATE_H3_UNI_EDGE(edge);
 
-    RETURN_OBJ(h3ue_to_obj(edge));
+    RETURN_OBJ(h3de_to_obj(edge));
 }
 
-PHP_METHOD(H3_H3UniEdge, isValid)
+PHP_METHOD(H3_H3DirectedEdge, isValid)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
 
-    RETURN_BOOL(h3UnidirectionalEdgeIsValid(edge));
+    RETURN_BOOL(isValidDirectedEdge(edge));
 }
 
-PHP_METHOD(H3_H3UniEdge, getOrigin)
+PHP_METHOD(H3_H3DirectedEdge, getOrigin)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
-    H3Index origin = getOriginH3IndexFromUnidirectionalEdge(edge);
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
+    H3Index origin;
+    H3Error err = getDirectedEdgeOrigin(edge, &origin);
+    if (err) {
+        H3_THROW("Failed to get origin", 0);
+        RETURN_THROWS();
+    }
 
     RETURN_OBJ(h3_to_obj(origin));
 }
 
-PHP_METHOD(H3_H3UniEdge, getDestination)
+PHP_METHOD(H3_H3DirectedEdge, getDestination)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
-    H3Index destination = getDestinationH3IndexFromUnidirectionalEdge(edge);
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
+    H3Index destination;
+    H3Error err = getDirectedEdgeDestination(edge, &destination);
+    if (err) {
+        H3_THROW("Failed to get destination", 0);
+        RETURN_THROWS();
+    }
 
     RETURN_OBJ(h3_to_obj(destination));
 }
 
-PHP_METHOD(H3_H3UniEdge, getIndexes)
+PHP_METHOD(H3_H3DirectedEdge, getIndexes)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
     H3Index *out = ecalloc(H3_EDGE_NUM_INDX, sizeof(H3Index));
-    getH3IndexesFromUnidirectionalEdge(edge, out);
+    H3Error err = directedEdgeToCells(edge, out);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to get edge cells", 0);
+        RETURN_THROWS();
+    }
 
     array_init_size(return_value, H3_EDGE_NUM_INDX);
     h3_array_to_zend_array(out, H3_EDGE_NUM_INDX, return_value);
@@ -1526,20 +1773,25 @@ PHP_METHOD(H3_H3UniEdge, getIndexes)
     efree(out);
 }
 
-PHP_METHOD(H3_H3UniEdge, getBoundary)
+PHP_METHOD(H3_H3DirectedEdge, getBoundary)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
-    GeoBoundary *boundary = emalloc(sizeof(GeoBoundary));
-    getH3UnidirectionalEdgeBoundary(edge, boundary);
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
+    CellBoundary *boundary = emalloc(sizeof(CellBoundary));
+    H3Error err = directedEdgeToBoundary(edge, boundary);
+    if (err) {
+        efree(boundary);
+        H3_THROW("Failed to get edge boundary", 0);
+        RETURN_THROWS();
+    }
 
     RETVAL_OBJ(geo_boundary_to_obj(boundary));
 
     efree(boundary);
 }
 
-PHP_METHOD(H3_H3UniEdge, getLength)
+PHP_METHOD(H3_H3DirectedEdge, getLength)
 {
     zend_long unit;
 
@@ -1549,15 +1801,32 @@ PHP_METHOD(H3_H3UniEdge, getLength)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
+    double out;
+    H3Error err;
 
     switch (unit) {
         case H3_LENGTH_UNIT_KM:
-            RETURN_DOUBLE(exactEdgeLengthKm(edge));
+            err = edgeLengthKm(edge, &out);
+            if (err) {
+                H3_THROW("Failed to get edge length", 0);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         case H3_LENGTH_UNIT_M:
-            RETURN_DOUBLE(exactEdgeLengthM(edge));
+            err = edgeLengthM(edge, &out);
+            if (err) {
+                H3_THROW("Failed to get edge length", 0);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         case H3_LENGTH_UNIT_RADS:
-            RETURN_DOUBLE(exactEdgeLengthRads(edge));
+            err = edgeLengthRads(edge, &out);
+            if (err) {
+                H3_THROW("Failed to get edge length", 0);
+                RETURN_THROWS();
+            }
+            RETURN_DOUBLE(out);
         default:
             H3_THROW("Unsupported unit (must be one of H3_LENGTH_UNIT_KM, H3_LENGTH_UNIT_M, or H3_LENGTH_UNIT_RADS)",
                      H3_ERR_CODE_UNSUPPORTED_UNIT);
@@ -1565,38 +1834,48 @@ PHP_METHOD(H3_H3UniEdge, getLength)
     }
 }
 
-PHP_METHOD(H3_H3UniEdge, toLong)
+PHP_METHOD(H3_H3DirectedEdge, toLong)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    RETURN_LONG(obj_to_h3ue(Z_OBJ_P(ZEND_THIS)));
+    RETURN_LONG(obj_to_h3de(Z_OBJ_P(ZEND_THIS)));
 }
 
-PHP_METHOD(H3_H3UniEdge, toString)
+PHP_METHOD(H3_H3DirectedEdge, toString)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
 
     char *out = emalloc(H3_STRVAL_LEN);
-    h3ToString(edge, out, H3_STRVAL_LEN);
+    H3Error err = h3ToString(edge, out, H3_STRVAL_LEN);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to convert edge to string", 0);
+        RETURN_THROWS();
+    }
     RETVAL_STRINGL(out, strlen(out));
     efree(out);
 }
 
-PHP_METHOD(H3_H3UniEdge, __toString)
+PHP_METHOD(H3_H3DirectedEdge, __toString)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
-    H3UniEdge edge = obj_to_h3ue(Z_OBJ_P(ZEND_THIS));
+    H3DirectedEdge edge = obj_to_h3de(Z_OBJ_P(ZEND_THIS));
 
     char *out = emalloc(H3_STRVAL_LEN);
-    h3ToString(edge, out, H3_STRVAL_LEN);
+    H3Error err = h3ToString(edge, out, H3_STRVAL_LEN);
+    if (err) {
+        efree(out);
+        H3_THROW("Failed to convert edge to string", 0);
+        RETURN_THROWS();
+    }
     RETVAL_STRINGL(out, strlen(out));
     efree(out);
 }
 
-PHP_METHOD(H3_GeoCoord, __construct)
+PHP_METHOD(H3_LatLng, __construct)
 {
     double lat, lon;
 
@@ -1607,35 +1886,35 @@ PHP_METHOD(H3_GeoCoord, __construct)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    zend_update_property_double(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lat", sizeof("lat") - 1, lat);
-    zend_update_property_double(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lon", sizeof("lon") - 1, lon);
+    zend_update_property_double(H3_LatLng_ce, Z_OBJ_P(ZEND_THIS), "lat", sizeof("lat") - 1, lat);
+    zend_update_property_double(H3_LatLng_ce, Z_OBJ_P(ZEND_THIS), "lon", sizeof("lon") - 1, lon);
 }
 
-PHP_METHOD(H3_GeoCoord, getLat)
+PHP_METHOD(H3_LatLng, getLat)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
     zval *prop;
     zval rv;
 
-    prop = zend_read_property(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lat", sizeof("lat") - 1, 1, &rv);
+    prop = zend_read_property(H3_LatLng_ce, Z_OBJ_P(ZEND_THIS), "lat", sizeof("lat") - 1, 1, &rv);
 
     RETURN_DOUBLE(Z_DVAL_P(prop));
 }
 
-PHP_METHOD(H3_GeoCoord, getLon)
+PHP_METHOD(H3_LatLng, getLon)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
     zval *prop;
     zval rv;
 
-    prop = zend_read_property(H3_GeoCoord_ce, Z_OBJ_P(ZEND_THIS), "lon", sizeof("lon") - 1, 1, &rv);
+    prop = zend_read_property(H3_LatLng_ce, Z_OBJ_P(ZEND_THIS), "lon", sizeof("lon") - 1, 1, &rv);
 
     RETURN_DOUBLE(Z_DVAL_P(prop));
 }
 
-PHP_METHOD(H3_GeoBoundary, __construct)
+PHP_METHOD(H3_CellBoundary, __construct)
 {
     zval *vertices;
 
@@ -1645,17 +1924,17 @@ PHP_METHOD(H3_GeoBoundary, __construct)
     ZEND_PARSE_PARAMETERS_END();
     // clang-format on
 
-    zend_update_property(H3_GeoBoundary_ce, Z_OBJ_P(ZEND_THIS), "vertices", sizeof("vertices") - 1, vertices);
+    zend_update_property(H3_CellBoundary_ce, Z_OBJ_P(ZEND_THIS), "vertices", sizeof("vertices") - 1, vertices);
 }
 
-PHP_METHOD(H3_GeoBoundary, getVertices)
+PHP_METHOD(H3_CellBoundary, getVertices)
 {
     ZEND_PARSE_PARAMETERS_NONE();
 
     zval *prop;
     zval rv;
 
-    prop = zend_read_property(H3_GeoBoundary_ce, Z_OBJ_P(ZEND_THIS), "vertices", sizeof("vertices") - 1, 1, &rv);
+    prop = zend_read_property(H3_CellBoundary_ce, Z_OBJ_P(ZEND_THIS), "vertices", sizeof("vertices") - 1, 1, &rv);
 
     Z_TRY_ADDREF_P(prop);
 
@@ -1670,7 +1949,7 @@ PHP_METHOD(H3_GeoPolygon, __construct)
 
     // clang-format off
     ZEND_PARSE_PARAMETERS_START(1, 2)
-        Z_PARAM_OBJ_OF_CLASS(geofence, H3_GeoBoundary_ce)
+        Z_PARAM_OBJ_OF_CLASS(geofence, H3_CellBoundary_ce)
         Z_PARAM_OPTIONAL
         Z_PARAM_ARRAY_OR_NULL(holes)
     ZEND_PARSE_PARAMETERS_END();
@@ -1823,9 +2102,9 @@ PHP_MINIT_FUNCTION(h3)
 
     H3_H3Exception_ce = register_class_H3_H3Exception(spl_ce_RuntimeException);
     H3_H3Index_ce = register_class_H3_H3Index();
-    H3_H3UniEdge_ce = register_class_H3_H3UniEdge();
-    H3_GeoCoord_ce = register_class_H3_GeoCoord();
-    H3_GeoBoundary_ce = register_class_H3_GeoBoundary();
+    H3_H3DirectedEdge_ce = register_class_H3_H3DirectedEdge();
+    H3_LatLng_ce = register_class_H3_LatLng();
+    H3_CellBoundary_ce = register_class_H3_CellBoundary();
     H3_GeoPolygon_ce = register_class_H3_GeoPolygon();
     H3_GeoMultiPolygon_ce = register_class_H3_GeoMultiPolygon();
     H3_CoordIJ_ce = register_class_H3_CoordIJ();

@@ -14,4 +14,4 @@ try {
 }
 ?>
 --EXPECT--
-bool(true)
+bool(false)

@@ -21,14 +21,14 @@ try {
 }
 
 try {
-    \H3\H3UniEdge::fromLong(0x85283473fffffff);
+    \H3\H3DirectedEdge::fromLong(0x85283473fffffff);
     var_dump(true);
 } catch (\H3\H3Exception $e) {
     var_dump(false);
 }
 
 try {
-    \H3\H3UniEdge::fromLong(0x115283473fffffff);
+    \H3\H3DirectedEdge::fromLong(0x115283473fffffff);
     var_dump(true);
 } catch (\H3\H3Exception $e) {
     var_dump(false);

@@ -27,10 +27,10 @@ if test "$PHP_H3" != "no"; then
     AC_MSG_ERROR([Could not find $SEARCH_FOR])
   fi
 
-  PHP_ADD_INCLUDE($LIBH3_DIR/include/h3)
+  PHP_ADD_INCLUDE($LIBH3_DIR/include)
 
   LIBNAME=h3
-  LIBSYMBOL=geoToH3
+  LIBSYMBOL=latLngToCell
 
   PHP_CHECK_LIBRARY($LIBNAME, $LIBSYMBOL,
   [

@@ -15,3 +15,21 @@ const H3_AREA_UNIT_RADS2 = 2;
 const H3_LENGTH_UNIT_KM = 0;
 const H3_LENGTH_UNIT_M = 1;
 const H3_LENGTH_UNIT_RADS = 2;
+
+// H3 v4 error codes
+const H3_E_SUCCESS = 0;
+const H3_E_FAILED = 1;
+const H3_E_DOMAIN = 2;
+const H3_E_LATLNG_DOMAIN = 3;
+const H3_E_RES_DOMAIN = 4;
+const H3_E_CELL_INVALID = 5;
+const H3_E_DIR_EDGE_INVALID = 6;
+const H3_E_UNDIR_EDGE_INVALID = 7;
+const H3_E_VERTEX_INVALID = 8;
+const H3_E_PENTAGON = 9;
+const H3_E_DUPLICATE_INPUT = 10;
+const H3_E_NOT_NEIGHBORS = 11;
+const H3_E_RES_MISMATCH = 12;
+const H3_E_MEMORY_ALLOC = 13;
+const H3_E_MEMORY_BOUNDS = 14;
+const H3_E_OPTION_INVALID = 15;

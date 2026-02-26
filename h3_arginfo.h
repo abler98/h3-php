@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 438fc6281b05d84e505cb265790171f28d5e9303 */
+ * Stub hash: h3v4-upgrade */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_degs_to_rads, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, degrees, IS_DOUBLE, 0)
@@ -28,8 +28,8 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_get_pentagon_indexes, 0, 1, I
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_H3_point_dist, 0, 3, IS_DOUBLE, 0)
-	ZEND_ARG_OBJ_INFO(0, a, H3\\GeoCoord, 0)
-	ZEND_ARG_OBJ_INFO(0, b, H3\\GeoCoord, 0)
+	ZEND_ARG_OBJ_INFO(0, a, H3\\LatLng, 0)
+	ZEND_ARG_OBJ_INFO(0, b, H3\\LatLng, 0)
 	ZEND_ARG_TYPE_INFO(0, unit, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -89,7 +89,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_fromString, 0, 1
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_fromGeo, 0, 2, H3\\H3Index, 0)
-	ZEND_ARG_OBJ_INFO(0, geo, H3\\GeoCoord, 0)
+	ZEND_ARG_OBJ_INFO(0, geo, H3\\LatLng, 0)
 	ZEND_ARG_TYPE_INFO(0, res, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -135,9 +135,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_getDistanceTo, 
 	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_H3_H3Index_getUnidirectionalEdges arginfo_H3_get_res0_indexes
+#define arginfo_class_H3_H3Index_getDirectedEdges arginfo_H3_get_res0_indexes
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_getUnidirectionalEdge, 0, 1, H3\\H3UniEdge, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_getDirectedEdge, 0, 1, H3\\H3DirectedEdge, 0)
 	ZEND_ARG_OBJ_INFO(0, destination, H3\\H3Index, 0)
 ZEND_END_ARG_INFO()
 
@@ -154,61 +154,61 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_H3Index_toString, 0, 0, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_toGeo, 0, 0, H3\\GeoCoord, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_toGeo, 0, 0, H3\\LatLng, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_toGeoBoundary, 0, 0, H3\\GeoBoundary, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3Index_toGeoBoundary, 0, 0, H3\\CellBoundary, 0)
 ZEND_END_ARG_INFO()
 
 #define arginfo_class_H3_H3Index___toString arginfo_class_H3_H3Index_toString
 
-#define arginfo_class_H3_H3UniEdge___construct arginfo_class_H3_H3Index___construct
+#define arginfo_class_H3_H3DirectedEdge___construct arginfo_class_H3_H3Index___construct
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3UniEdge_fromLong, 0, 1, H3\\H3UniEdge, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3DirectedEdge_fromLong, 0, 1, H3\\H3DirectedEdge, 0)
 	ZEND_ARG_TYPE_INFO(0, index, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3UniEdge_fromString, 0, 1, H3\\H3UniEdge, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3DirectedEdge_fromString, 0, 1, H3\\H3DirectedEdge, 0)
 	ZEND_ARG_TYPE_INFO(0, value, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_H3_H3UniEdge_isValid arginfo_class_H3_H3Index_isValid
+#define arginfo_class_H3_H3DirectedEdge_isValid arginfo_class_H3_H3Index_isValid
 
-ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3UniEdge_getOrigin, 0, 0, H3\\H3Index, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_class_H3_H3DirectedEdge_getOrigin, 0, 0, H3\\H3Index, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_H3_H3UniEdge_getDestination arginfo_class_H3_H3UniEdge_getOrigin
+#define arginfo_class_H3_H3DirectedEdge_getDestination arginfo_class_H3_H3DirectedEdge_getOrigin
 
-#define arginfo_class_H3_H3UniEdge_getIndexes arginfo_H3_get_res0_indexes
+#define arginfo_class_H3_H3DirectedEdge_getIndexes arginfo_H3_get_res0_indexes
 
-#define arginfo_class_H3_H3UniEdge_getBoundary arginfo_class_H3_H3Index_toGeoBoundary
+#define arginfo_class_H3_H3DirectedEdge_getBoundary arginfo_class_H3_H3Index_toGeoBoundary
 
-#define arginfo_class_H3_H3UniEdge_getLength arginfo_class_H3_H3Index_getCellArea
+#define arginfo_class_H3_H3DirectedEdge_getLength arginfo_class_H3_H3Index_getCellArea
 
-#define arginfo_class_H3_H3UniEdge_toLong arginfo_class_H3_H3Index_getResolution
+#define arginfo_class_H3_H3DirectedEdge_toLong arginfo_class_H3_H3Index_getResolution
 
-#define arginfo_class_H3_H3UniEdge_toString arginfo_class_H3_H3Index_toString
+#define arginfo_class_H3_H3DirectedEdge_toString arginfo_class_H3_H3Index_toString
 
-#define arginfo_class_H3_H3UniEdge___toString arginfo_class_H3_H3Index_toString
+#define arginfo_class_H3_H3DirectedEdge___toString arginfo_class_H3_H3Index_toString
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_GeoCoord___construct, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_LatLng___construct, 0, 0, 2)
 	ZEND_ARG_TYPE_INFO(0, lat, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, lon, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_GeoCoord_getLat, 0, 0, IS_DOUBLE, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_H3_LatLng_getLat, 0, 0, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_H3_GeoCoord_getLon arginfo_class_H3_GeoCoord_getLat
+#define arginfo_class_H3_LatLng_getLon arginfo_class_H3_LatLng_getLat
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_GeoBoundary___construct, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_CellBoundary___construct, 0, 0, 1)
 	ZEND_ARG_TYPE_INFO(0, vertices, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
 
-#define arginfo_class_H3_GeoBoundary_getVertices arginfo_H3_get_res0_indexes
+#define arginfo_class_H3_CellBoundary_getVertices arginfo_H3_get_res0_indexes
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_class_H3_GeoPolygon___construct, 0, 0, 1)
-	ZEND_ARG_OBJ_INFO(0, geofence, H3\\GeoBoundary, 0)
+	ZEND_ARG_OBJ_INFO(0, geofence, H3\\CellBoundary, 0)
 	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, holes, IS_ARRAY, 0, "[]")
 ZEND_END_ARG_INFO()
 
@@ -270,8 +270,8 @@ ZEND_METHOD(H3_H3Index, getCellArea);
 ZEND_METHOD(H3_H3Index, isNeighborTo);
 ZEND_METHOD(H3_H3Index, getLineTo);
 ZEND_METHOD(H3_H3Index, getDistanceTo);
-ZEND_METHOD(H3_H3Index, getUnidirectionalEdges);
-ZEND_METHOD(H3_H3Index, getUnidirectionalEdge);
+ZEND_METHOD(H3_H3Index, getDirectedEdges);
+ZEND_METHOD(H3_H3Index, getDirectedEdge);
 ZEND_METHOD(H3_H3Index, toParent);
 ZEND_METHOD(H3_H3Index, toChildren);
 ZEND_METHOD(H3_H3Index, toCenterChild);
@@ -280,23 +280,23 @@ ZEND_METHOD(H3_H3Index, toString);
 ZEND_METHOD(H3_H3Index, toGeo);
 ZEND_METHOD(H3_H3Index, toGeoBoundary);
 ZEND_METHOD(H3_H3Index, __toString);
-ZEND_METHOD(H3_H3UniEdge, __construct);
-ZEND_METHOD(H3_H3UniEdge, fromLong);
-ZEND_METHOD(H3_H3UniEdge, fromString);
-ZEND_METHOD(H3_H3UniEdge, isValid);
-ZEND_METHOD(H3_H3UniEdge, getOrigin);
-ZEND_METHOD(H3_H3UniEdge, getDestination);
-ZEND_METHOD(H3_H3UniEdge, getIndexes);
-ZEND_METHOD(H3_H3UniEdge, getBoundary);
-ZEND_METHOD(H3_H3UniEdge, getLength);
-ZEND_METHOD(H3_H3UniEdge, toLong);
-ZEND_METHOD(H3_H3UniEdge, toString);
-ZEND_METHOD(H3_H3UniEdge, __toString);
-ZEND_METHOD(H3_GeoCoord, __construct);
-ZEND_METHOD(H3_GeoCoord, getLat);
-ZEND_METHOD(H3_GeoCoord, getLon);
-ZEND_METHOD(H3_GeoBoundary, __construct);
-ZEND_METHOD(H3_GeoBoundary, getVertices);
+ZEND_METHOD(H3_H3DirectedEdge, __construct);
+ZEND_METHOD(H3_H3DirectedEdge, fromLong);
+ZEND_METHOD(H3_H3DirectedEdge, fromString);
+ZEND_METHOD(H3_H3DirectedEdge, isValid);
+ZEND_METHOD(H3_H3DirectedEdge, getOrigin);
+ZEND_METHOD(H3_H3DirectedEdge, getDestination);
+ZEND_METHOD(H3_H3DirectedEdge, getIndexes);
+ZEND_METHOD(H3_H3DirectedEdge, getBoundary);
+ZEND_METHOD(H3_H3DirectedEdge, getLength);
+ZEND_METHOD(H3_H3DirectedEdge, toLong);
+ZEND_METHOD(H3_H3DirectedEdge, toString);
+ZEND_METHOD(H3_H3DirectedEdge, __toString);
+ZEND_METHOD(H3_LatLng, __construct);
+ZEND_METHOD(H3_LatLng, getLat);
+ZEND_METHOD(H3_LatLng, getLon);
+ZEND_METHOD(H3_CellBoundary, __construct);
+ZEND_METHOD(H3_CellBoundary, getVertices);
 ZEND_METHOD(H3_GeoPolygon, __construct);
 ZEND_METHOD(H3_GeoPolygon, getGeofence);
 ZEND_METHOD(H3_GeoPolygon, getHoles);
@@ -355,8 +355,8 @@ static const zend_function_entry class_H3_H3Index_methods[] = {
 	ZEND_ME(H3_H3Index, isNeighborTo, arginfo_class_H3_H3Index_isNeighborTo, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getLineTo, arginfo_class_H3_H3Index_getLineTo, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, getDistanceTo, arginfo_class_H3_H3Index_getDistanceTo, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3Index, getUnidirectionalEdges, arginfo_class_H3_H3Index_getUnidirectionalEdges, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3Index, getUnidirectionalEdge, arginfo_class_H3_H3Index_getUnidirectionalEdge, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, getDirectedEdges, arginfo_class_H3_H3Index_getDirectedEdges, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3Index, getDirectedEdge, arginfo_class_H3_H3Index_getDirectedEdge, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toParent, arginfo_class_H3_H3Index_toParent, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toChildren, arginfo_class_H3_H3Index_toChildren, ZEND_ACC_PUBLIC)
 	ZEND_ME(H3_H3Index, toCenterChild, arginfo_class_H3_H3Index_toCenterChild, ZEND_ACC_PUBLIC)
@@ -369,34 +369,34 @@ static const zend_function_entry class_H3_H3Index_methods[] = {
 };
 
 
-static const zend_function_entry class_H3_H3UniEdge_methods[] = {
-	ZEND_ME(H3_H3UniEdge, __construct, arginfo_class_H3_H3UniEdge___construct, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, fromLong, arginfo_class_H3_H3UniEdge_fromLong, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_ME(H3_H3UniEdge, fromString, arginfo_class_H3_H3UniEdge_fromString, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_ME(H3_H3UniEdge, isValid, arginfo_class_H3_H3UniEdge_isValid, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, getOrigin, arginfo_class_H3_H3UniEdge_getOrigin, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, getDestination, arginfo_class_H3_H3UniEdge_getDestination, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, getIndexes, arginfo_class_H3_H3UniEdge_getIndexes, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, getBoundary, arginfo_class_H3_H3UniEdge_getBoundary, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, getLength, arginfo_class_H3_H3UniEdge_getLength, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, toLong, arginfo_class_H3_H3UniEdge_toLong, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, toString, arginfo_class_H3_H3UniEdge_toString, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_H3UniEdge, __toString, arginfo_class_H3_H3UniEdge___toString, ZEND_ACC_PUBLIC)
+static const zend_function_entry class_H3_H3DirectedEdge_methods[] = {
+	ZEND_ME(H3_H3DirectedEdge, __construct, arginfo_class_H3_H3DirectedEdge___construct, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, fromLong, arginfo_class_H3_H3DirectedEdge_fromLong, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(H3_H3DirectedEdge, fromString, arginfo_class_H3_H3DirectedEdge_fromString, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(H3_H3DirectedEdge, isValid, arginfo_class_H3_H3DirectedEdge_isValid, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, getOrigin, arginfo_class_H3_H3DirectedEdge_getOrigin, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, getDestination, arginfo_class_H3_H3DirectedEdge_getDestination, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, getIndexes, arginfo_class_H3_H3DirectedEdge_getIndexes, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, getBoundary, arginfo_class_H3_H3DirectedEdge_getBoundary, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, getLength, arginfo_class_H3_H3DirectedEdge_getLength, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, toLong, arginfo_class_H3_H3DirectedEdge_toLong, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, toString, arginfo_class_H3_H3DirectedEdge_toString, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_H3DirectedEdge, __toString, arginfo_class_H3_H3DirectedEdge___toString, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
 
-static const zend_function_entry class_H3_GeoCoord_methods[] = {
-	ZEND_ME(H3_GeoCoord, __construct, arginfo_class_H3_GeoCoord___construct, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_GeoCoord, getLat, arginfo_class_H3_GeoCoord_getLat, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_GeoCoord, getLon, arginfo_class_H3_GeoCoord_getLon, ZEND_ACC_PUBLIC)
+static const zend_function_entry class_H3_LatLng_methods[] = {
+	ZEND_ME(H3_LatLng, __construct, arginfo_class_H3_LatLng___construct, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_LatLng, getLat, arginfo_class_H3_LatLng_getLat, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_LatLng, getLon, arginfo_class_H3_LatLng_getLon, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
 
-static const zend_function_entry class_H3_GeoBoundary_methods[] = {
-	ZEND_ME(H3_GeoBoundary, __construct, arginfo_class_H3_GeoBoundary___construct, ZEND_ACC_PUBLIC)
-	ZEND_ME(H3_GeoBoundary, getVertices, arginfo_class_H3_GeoBoundary_getVertices, ZEND_ACC_PUBLIC)
+static const zend_function_entry class_H3_CellBoundary_methods[] = {
+	ZEND_ME(H3_CellBoundary, __construct, arginfo_class_H3_CellBoundary___construct, ZEND_ACC_PUBLIC)
+	ZEND_ME(H3_CellBoundary, getVertices, arginfo_class_H3_CellBoundary_getVertices, ZEND_ACC_PUBLIC)
 	ZEND_FE_END
 };
 
@@ -452,11 +452,11 @@ static zend_class_entry *register_class_H3_H3Index(void)
 	return class_entry;
 }
 
-static zend_class_entry *register_class_H3_H3UniEdge(void)
+static zend_class_entry *register_class_H3_H3DirectedEdge(void)
 {
 	zend_class_entry ce, *class_entry;
 
-	INIT_NS_CLASS_ENTRY(ce, "H3", "H3UniEdge", class_H3_H3UniEdge_methods);
+	INIT_NS_CLASS_ENTRY(ce, "H3", "H3DirectedEdge", class_H3_H3DirectedEdge_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 
@@ -469,11 +469,11 @@ static zend_class_entry *register_class_H3_H3UniEdge(void)
 	return class_entry;
 }
 
-static zend_class_entry *register_class_H3_GeoCoord(void)
+static zend_class_entry *register_class_H3_LatLng(void)
 {
 	zend_class_entry ce, *class_entry;
 
-	INIT_NS_CLASS_ENTRY(ce, "H3", "GeoCoord", class_H3_GeoCoord_methods);
+	INIT_NS_CLASS_ENTRY(ce, "H3", "LatLng", class_H3_LatLng_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 
@@ -492,11 +492,11 @@ static zend_class_entry *register_class_H3_GeoCoord(void)
 	return class_entry;
 }
 
-static zend_class_entry *register_class_H3_GeoBoundary(void)
+static zend_class_entry *register_class_H3_CellBoundary(void)
 {
 	zend_class_entry ce, *class_entry;
 
-	INIT_NS_CLASS_ENTRY(ce, "H3", "GeoBoundary", class_H3_GeoBoundary_methods);
+	INIT_NS_CLASS_ENTRY(ce, "H3", "CellBoundary", class_H3_CellBoundary_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 
@@ -517,11 +517,11 @@ static zend_class_entry *register_class_H3_GeoPolygon(void)
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_FINAL;
 
-	zend_string *property_geofence_class_H3_GeoBoundary = zend_string_init("H3\\GeoBoundary", sizeof("H3\\GeoBoundary")-1, 1);
+	zend_string *property_geofence_class_H3_CellBoundary = zend_string_init("H3\\CellBoundary", sizeof("H3\\CellBoundary")-1, 1);
 	zval property_geofence_default_value;
 	ZVAL_UNDEF(&property_geofence_default_value);
 	zend_string *property_geofence_name = zend_string_init("geofence", sizeof("geofence") - 1, 1);
-	zend_declare_typed_property(class_entry, property_geofence_name, &property_geofence_default_value, ZEND_ACC_PRIVATE, NULL, (zend_type) ZEND_TYPE_INIT_CLASS(property_geofence_class_H3_GeoBoundary, 0, 0));
+	zend_declare_typed_property(class_entry, property_geofence_name, &property_geofence_default_value, ZEND_ACC_PRIVATE, NULL, (zend_type) ZEND_TYPE_INIT_CLASS(property_geofence_class_H3_CellBoundary, 0, 0));
 	zend_string_release(property_geofence_name);
 
 	zval property_holes_default_value;

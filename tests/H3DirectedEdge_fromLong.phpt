@@ -1,10 +1,10 @@
 --TEST--
-H3\H3UniEdge::toString() Test
+H3\H3DirectedEdge::fromLong() Test
 --EXTENSIONS--
 h3
 --FILE--
 <?php
-$h3 = new \H3\H3UniEdge(0x115283473fffffff);
+$h3 = \H3\H3DirectedEdge::fromLong(0x115283473fffffff);
 
 var_dump($h3->toString());
 ?>

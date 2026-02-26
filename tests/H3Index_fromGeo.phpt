@@ -4,7 +4,7 @@ H3\H3Index::fromGeo() Test
 h3
 --FILE--
 <?php
-$geo = new \H3\GeoCoord(49.99185845731755, 36.24805297746707);
+$geo = new \H3\LatLng(49.99185845731755, 36.24805297746707);
 $h3 = \H3\H3Index::fromGeo($geo, 8);
 
 var_dump($h3->toString());
@@ -15,5 +15,5 @@ var_dump($h3Geo->getLon());
 ?>
 --EXPECTF--
 string(%d) "8811964009fffff"
-float(49.99549092422341)
-float(36.247513580515694)
+float(49.9954909242234%s)
+float(36.2475135805156%s)

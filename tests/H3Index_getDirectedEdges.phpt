@@ -1,11 +1,11 @@
 --TEST--
-H3\H3Index::getUnidirectionalEdges() Test
+H3\H3Index::getDirectedEdges() Test
 --EXTENSIONS--
 h3
 --FILE--
 <?php
 $h3 = new \H3\H3Index(0x85283473fffffff);
-$edges = $h3->getUnidirectionalEdges();
+$edges = $h3->getDirectedEdges();
 
 foreach ($edges as $edge) {
     var_dump($edge->toString());

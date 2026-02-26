@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        php: [ '8.1', '8.2', '8.3', '8.4', '8.5' ]
+        h3: [ '4.2.1' ]
+        os: [ ubuntu-latest, macos-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout H3 lib
+        uses: actions/checkout@v3
+        with:
+          repository: uber/h3
+          ref: v${{ matrix.h3 }}
+          path: h3-lib
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake make gcc g++
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake
+
+      - name: Build H3 lib
+        working-directory: h3-lib
+        run: |
+          cmake -DBUILD_SHARED_LIBS=ON .
+          make
+          sudo make install
+
+      - name: Fix shared library cache (Linux)
+        if: runner.os == 'Linux'
+        run: sudo ldconfig
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Build extension
+        run: |
+          phpize
+          ./configure --with-h3
+          make
+          sudo make install
+
+      - name: Run tests
+        run: |
+          export NO_INTERACTION=1
+          export REPORT_EXIT_STATUS=1
+          export TEST_PHP_EXECUTABLE=$(which php)
+          php run-tests.php --show-diff -d extension=h3.so ./tests/*.phpt
+
+      - name: Prepare release asset
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            cp modules/h3.so "h3-php${{ matrix.php }}-linux-$(uname -m).so"
+          else
+            cp modules/h3.so "h3-php${{ matrix.php }}-macos-$(uname -m).so"
+          fi
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: h3-php${{ matrix.php }}-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

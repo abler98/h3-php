@@ -7,4 +7,4 @@ h3
 var_dump(\H3\rads_to_degs(3.14159));
 ?>
 --EXPECT--
-float(179.99984796050427)
+float(179.9998479605043)

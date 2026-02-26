@@ -15,7 +15,7 @@ try {
 
 try {
     $multiPolygon = new \H3\GeoMultiPolygon([
-        new \H3\GeoPolygon(new \H3\GeoBoundary([new \H3\GeoCoord(0, 0)]), ['invalid hole']),
+        new \H3\GeoPolygon(new \H3\CellBoundary([new \H3\LatLng(0, 0)]), ['invalid hole']),
     ]);
     $multiPolygon->toGeoJson();
 } catch (\Throwable $e) {
@@ -24,7 +24,7 @@ try {
 
 try {
     $multiPolygon = new \H3\GeoMultiPolygon([
-        new \H3\GeoPolygon(new \H3\GeoBoundary(['invalid coord'])),
+        new \H3\GeoPolygon(new \H3\CellBoundary(['invalid coord'])),
     ]);
     $multiPolygon->toGeoJson();
 } catch (\Throwable $e) {
@@ -33,7 +33,7 @@ try {
 
 try {
     $multiPolygon = new \H3\GeoMultiPolygon([
-        new \H3\GeoPolygon(new \H3\GeoBoundary([])),
+        new \H3\GeoPolygon(new \H3\CellBoundary([])),
     ]);
     $multiPolygon->toGeoJson();
 } catch (\Throwable $e) {
@@ -42,7 +42,7 @@ try {
 
 try {
     $multiPolygon = new \H3\GeoMultiPolygon([
-        new \H3\GeoPolygon(new \H3\GeoBoundary([new \H3\GeoCoord(0, 0)])),
+        new \H3\GeoPolygon(new \H3\CellBoundary([new \H3\LatLng(0, 0)])),
         'invalid polygon',
     ]);
     $multiPolygon->toGeoJson();

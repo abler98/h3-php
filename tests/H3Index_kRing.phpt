@@ -4,7 +4,7 @@ H3\H3Index::kRing() Test
 h3
 --FILE--
 <?php
-$geo = new \H3\GeoCoord(49.99185845731755, 36.24805297746707);
+$geo = new \H3\LatLng(49.99185845731755, 36.24805297746707);
 $h3 = \H3\H3Index::fromGeo($geo, 8);
 $kRing = $h3->kRing(1);
 

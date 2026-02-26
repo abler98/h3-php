@@ -1,10 +1,10 @@
 --TEST--
-H3\H3UniEdge::getBoundary() Test
+H3\H3DirectedEdge::getBoundary() Test
 --EXTENSIONS--
 h3
 --FILE--
 <?php
-$edge = \H3\H3UniEdge::fromString('115283473fffffff');
+$edge = \H3\H3DirectedEdge::fromString('115283473fffffff');
 $boundary = $edge->getBoundary();
 
 var_dump(count($boundary->getVertices()));
